@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 graphics = { path = "../../GRAPHICS/graphics" }
-rctest = { path = "../../NOTATION/rctest" }
+notation-rs = { path = "../../NOTATION/notation-rs" }
 
 [dev-dependencies]
