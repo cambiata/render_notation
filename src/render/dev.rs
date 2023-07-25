@@ -71,16 +71,20 @@ pub fn next2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<GraphicIte
             //
             Some(Path(PathSegments(p).inv01().move_path(r.0, r.1 + y), NoStroke, Fillstyle(Black)))
         }
+
         NRectType::WIP(msg) => {
             //
             println!("WIP:{}", msg);
             None //Some(Path(PathSegments(CADENZA_3.to_vec()).inv01(), NoStroke, Fillstyle(Black)))
         }
+
         NRectType::DevStem(color) => {
             let color = Color::from_str(color);
             Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(color)))
         }
+
         NRectType::Tie(tie) => None, // Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Black)),
+
         NRectType::LyricChar(c) => {
             //
             fn get_glyph_path(p: Vec<PathSegment>, rect: &NRect) -> Option<GraphicItem> {
@@ -140,12 +144,14 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                 for nrect in nrects.iter() {
                     let nrect = nrect.borrow();
 
+                    // bounding rect - for development
                     let frame_rect = nrect.0.clone();
-                    let color = if col.duration == 0 { "orange" } else { "blue" };
+                    let color = if col.duration == 0 { "orange" } else { "lightgray" };
                     let frame_nrect = NRectExt::new(frame_rect, NRectType::Dev(false, color.to_string()));
                     let frame_item = next2graphic(&frame_nrect, coords.0, coords.1).unwrap();
                     items.push(frame_item);
 
+                    // glyph rect
                     if let Some(graphic_item) = next2graphic(&nrect, coords.0, coords.1) {
                         items.push(graphic_item);
                     }
