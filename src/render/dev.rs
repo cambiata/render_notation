@@ -76,7 +76,10 @@ pub fn next2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<GraphicIte
             println!("WIP:{}", msg);
             None //Some(Path(PathSegments(CADENZA_3.to_vec()).inv01(), NoStroke, Fillstyle(Black)))
         }
-        NRectType::DevStem => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Black))),
+        NRectType::DevStem(color) => {
+            let color = Color::from_str(color);
+            Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(color)))
+        }
         NRectType::Tie(tie) => None, // Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Black)),
         NRectType::LyricChar(c) => {
             //
