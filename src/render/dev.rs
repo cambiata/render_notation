@@ -46,10 +46,11 @@ pub fn next2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<GraphicIte
             };
             Some(Path(PathSegments(p).inv01().move_path(r.0, r.1 + y), NoStroke, Fillstyle(Black)))
         }
-        NRectType::Clef(_) => {
-            //
-            Some(Path(PathSegments(CADENZA_8.to_vec()).inv01(), NoStroke, Fillstyle(Black)))
-        }
+        NRectType::Clef(clef) => match clef {
+            Clef::G => Some(Path(PathSegments(CADENZA_8.to_vec()).inv01().move_path(r.0, r.1 + 4.6 * SPACE), NoStroke, Fillstyle(Black))),
+            Clef::F => Some(Path(PathSegments(CADENZA_33.to_vec()).inv01().move_path(r.0, r.1 + SPACE), NoStroke, Fillstyle(Black))),
+            Clef::C => Some(Path(PathSegments(CADENZA_36.to_vec()).inv01().move_path(r.0, r.1 + 2.0 * SPACE), NoStroke, Fillstyle(Black))),
+        },
         NRectType::Accidental(accidental) => {
             let p = match accidental {
                 Accidental::Sharp => CADENZA_ACCIDENTAL_SHARP.to_vec(),
@@ -73,7 +74,7 @@ pub fn next2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<GraphicIte
         NRectType::WIP(msg) => {
             //
             println!("WIP:{}", msg);
-            Some(Path(PathSegments(CADENZA_3.to_vec()).inv01(), NoStroke, Fillstyle(Black)))
+            None //Some(Path(PathSegments(CADENZA_3.to_vec()).inv01(), NoStroke, Fillstyle(Black)))
         }
         NRectType::DevStem => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Black))),
         NRectType::Tie(tie) => None, // Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Black)),
@@ -142,8 +143,10 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                     let frame_item = next2graphic(&frame_nrect, coords.0, coords.1).unwrap();
                     items.push(frame_item);
 
-                    let graphic_item = next2graphic(&nrect, coords.0, coords.1).unwrap();
-                    items.push(graphic_item);
+                    if let Some(graphic_item) = next2graphic(&nrect, coords.0, coords.1) {
+                        items.push(graphic_item);
+                    }
+                    // let graphic_item = next2graphic(&nrect, coords.0, coords.1).unwrap();
                 }
             } else {
                 let y = matrix.get_row(rowidx).unwrap().borrow().y;
