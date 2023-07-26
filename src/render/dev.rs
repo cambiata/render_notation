@@ -61,11 +61,7 @@ pub fn next2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<GraphicIte
                 // _ => CADENZA_ACCIDENTAL_FLAT.to_vec(),
             };
             let y = match accidental {
-                // Accidental::Sharp => SPACE * 1.5,
                 Accidental::Flat => SPACE * 2.0,
-                // Accidental::Natural => 0.,
-                // Accidental::DblSharp => 0.,
-                // Accidental::DblFlat => 0.,
                 _ => SPACE * 1.5,
             };
             //
@@ -224,10 +220,10 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
 
                             use PathSegment::*;
                             let test_path = vec![
-                                M(note_beam_start.0, note_beam_start.1),
-                                L(note_beam_end.0 + STEM_WIDTH, note_beam_end.1),
-                                L(note_beam_end.0 + STEM_WIDTH, note_beam_end.1 + BEAM_HEIGHT),
-                                L(note_beam_start.0, note_beam_start.1 + BEAM_HEIGHT),
+                                M(note_beam_start.0, note_beam_start.1 - BEAM_COVER_STEM),
+                                L(note_beam_end.0 + STEM_WIDTH, note_beam_end.1 - BEAM_COVER_STEM),
+                                L(note_beam_end.0 + STEM_WIDTH, note_beam_end.1 + BEAM_HEIGHT - BEAM_COVER_STEM),
+                                L(note_beam_start.0, note_beam_start.1 + BEAM_HEIGHT - BEAM_COVER_STEM),
                                 Z,
                             ];
 
@@ -267,10 +263,10 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
 
                             use PathSegment::*;
                             let test_path = vec![
-                                M(note2_beam_start.0, note2_beam_start.1 - BEAM_HEIGHT),
-                                L(note2_beam_end.0 + STEM_WIDTH, note2_beam_end.1 - BEAM_HEIGHT),
-                                L(note2_beam_end.0 + STEM_WIDTH, note2_beam_end.1),
-                                L(note2_beam_start.0, note2_beam_start.1),
+                                M(note2_beam_start.0, note2_beam_start.1 - BEAM_HEIGHT + BEAM_COVER_STEM),
+                                L(note2_beam_end.0 + STEM_WIDTH, note2_beam_end.1 - BEAM_HEIGHT + BEAM_COVER_STEM),
+                                L(note2_beam_end.0 + STEM_WIDTH, note2_beam_end.1 + BEAM_COVER_STEM),
+                                L(note2_beam_start.0, note2_beam_start.1 + BEAM_COVER_STEM),
                                 Z,
                             ];
 
