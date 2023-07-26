@@ -168,6 +168,119 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
             rowidx += 1;
         }
     }
+
+    for row in matrix.rows.iter() {
+        let row = row.borrow();
+
+        let mut note_beam_start: (f32, f32, f32) = (0., 0., 0.);
+        let mut note_beam_end: (f32, f32, f32) = (0., 0., 0.);
+
+        let mut note2_beam_start: (f32, f32, f32) = (0., 0., 0.);
+        let mut note2_beam_end: (f32, f32, f32) = (0., 0., 0.);
+
+        for item in &row.items {
+            if let Some(item) = item {
+                let item: Ref<RItem> = item.borrow();
+                // upper beams
+                let NPoint(item_x, item_y) = item.coords.expect("RItem coords should always be calculated!");
+
+                // do_beam(&item, &item.note_beam, note_beam_start);
+
+                match &item.note_beam {
+                    RItemBeam::Single(data) | RItemBeam::Start(data) | RItemBeam::End(data) => match &item.note_beam {
+                        RItemBeam::Single(data) => {
+                            println!("Single - do noting already done");
+                        }
+                        RItemBeam::Start(data) => {
+                            let (beam_x, beam_y, beam_y2) = item.note_beam_xyy2.unwrap();
+                            note_beam_start = (item_x + beam_x, item_y + beam_y, item_y + beam_y2);
+                        }
+                        RItemBeam::End(data) => {
+                            println!("End {} {:?}", data.id, note_beam_start);
+                            let (beam_x, beam_y, beam_y2) = item.note_beam_xyy2.unwrap();
+                            note_beam_end = (item_x + beam_x, item_y + beam_y, item_y + beam_y2);
+
+                            // // start dot
+                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "red".to_string()));
+                            // items.push(next2graphic(&nrect, note_beam_start.0, note_beam_start.1).unwrap());
+                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "lime".to_string()));
+                            // items.push(next2graphic(&nrect, note_beam_start.0, note_beam_start.2).unwrap());
+
+                            // // end dot
+                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "red".to_string()));
+                            // items.push(next2graphic(&nrect, note_beam_end.0, note_beam_end.1).unwrap());
+                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "lime".to_string()));
+                            // items.push(next2graphic(&nrect, note_beam_end.0, note_beam_end.2).unwrap());
+
+                            use PathSegment::*;
+                            let test_path = vec![
+                                M(note_beam_start.0, note_beam_start.1),
+                                L(note_beam_end.0 + STEM_WIDTH, note_beam_end.1),
+                                L(note_beam_end.0 + STEM_WIDTH, note_beam_end.1 + BEAM_HEIGHT),
+                                L(note_beam_start.0, note_beam_start.1 + BEAM_HEIGHT),
+                                Z,
+                            ];
+
+                            items.push(Path(PathSegments(test_path).move_path(0.0, 0.0), NoStroke, Fillstyle(Black)));
+                        }
+                        _ => {}
+                    },
+
+                    RItemBeam::Middle(id, a, b) => {
+                        println!("Middle {} {} {}", id, a, b);
+                    }
+                    _ => {}
+                }
+
+                match &item.note2_beam {
+                    RItemBeam::Single(data) | RItemBeam::Start(data) | RItemBeam::End(data) => match &item.note2_beam {
+                        RItemBeam::Single(data) => {
+                            println!("Single - do noting already done");
+                        }
+                        RItemBeam::Start(data) => {
+                            let (beam_x, beam_y, beam_y2) = item.note2_beam_xyy2.unwrap();
+                            note2_beam_start = (item_x + beam_x, item_y + beam_y2, item_y + beam_y);
+                        }
+                        RItemBeam::End(data) => {
+                            println!("End {} {:?}", data.id, note2_beam_start);
+                            let (beam_x, beam_y, beam_y2) = item.note2_beam_xyy2.unwrap();
+                            note2_beam_end = (item_x + beam_x, item_y + beam_y2, item_y + beam_y);
+
+                            // // start dot
+                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "red".to_string()));
+                            // items.push(next2graphic(&nrect, note2_beam_start.0, note2_beam_start.1).unwrap());
+                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "lime".to_string()));
+                            // items.push(next2graphic(&nrect, note2_beam_start.0, note2_beam_start.2).unwrap());
+
+                            // // end dot
+                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "red".to_string()));
+                            // items.push(next2graphic(&nrect, note2_beam_end.0, note2_beam_end.1).unwrap());
+                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "lime".to_string()));
+                            // items.push(next2graphic(&nrect, note2_beam_end.0, note2_beam_end.2).unwrap());
+
+                            use PathSegment::*;
+                            let test_path = vec![
+                                M(note2_beam_start.0, note2_beam_start.1 - BEAM_HEIGHT),
+                                L(note2_beam_end.0 + STEM_WIDTH, note2_beam_end.1 - BEAM_HEIGHT),
+                                L(note2_beam_end.0 + STEM_WIDTH, note2_beam_end.1),
+                                L(note2_beam_start.0, note2_beam_start.1),
+                                Z,
+                            ];
+
+                            items.push(Path(PathSegments(test_path).move_path(0.0, 0.0), NoStroke, Fillstyle(Black)));
+                        }
+                        _ => {}
+                    },
+
+                    RItemBeam::Middle(id, a, b) => {
+                        println!("Middle {} {} {}", id, a, b);
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
     dbg!(matrix.width, matrix.height);
     let svg = SvgBuilder::new().build(items).unwrap();
     std::fs::write(svg_filename, svg).unwrap();
