@@ -170,6 +170,9 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
 
         let mut note_beam_start: (f32, f32, f32) = (0., 0., 0.);
         let mut note_beam_end: (f32, f32, f32) = (0., 0., 0.);
+        // let mut note_middles_data: Vec<RItemBeamData> = vec![];
+        let mut note_middles_data: Vec<(f32, RItemBeamData)> = vec![];
+        let mut note2_middles_data: Vec<(f32, RItemBeamData)> = vec![];
 
         let mut note2_beam_start: (f32, f32, f32) = (0., 0., 0.);
         let mut note2_beam_end: (f32, f32, f32) = (0., 0., 0.);
@@ -189,7 +192,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                         }
                         RItemBeam::Start(data) => {
                             let (beam_x, beam_y, beam_y2) = item.note_beam_xyy2.unwrap();
-
+                            note_middles_data = vec![];
                             note_beam_start = match data.direction {
                                 DirUD::Down => (item_x + beam_x, item_y + beam_y2, item_y + beam_y),
                                 DirUD::Up => (item_x + beam_x, item_y + beam_y, item_y + beam_y2),
@@ -206,34 +209,68 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                                 DirUD::Up => (item_x + beam_x, item_y + beam_y, item_y + beam_y2),
                             };
 
-                            // // start dot
-                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "red".to_string()));
-                            // items.push(next2graphic(&nrect, note_beam_start.0, note_beam_start.1).unwrap());
-                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "lime".to_string()));
-                            // items.push(next2graphic(&nrect, note_beam_start.0, note_beam_start.2).unwrap());
-
-                            // // end dot
-                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "red".to_string()));
-                            // items.push(next2graphic(&nrect, note_beam_end.0, note_beam_end.1).unwrap());
-                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "lime".to_string()));
-                            // items.push(next2graphic(&nrect, note_beam_end.0, note_beam_end.2).unwrap());
-
                             use PathSegment::*;
                             let test_path = vec![
-                                M(note_beam_start.0, note_beam_start.1 - BEAM_COVER_STEM),
-                                L(note_beam_end.0 + STEM_WIDTH, note_beam_end.1 - BEAM_COVER_STEM),
-                                L(note_beam_end.0 + STEM_WIDTH, note_beam_end.1 + BEAM_HEIGHT - BEAM_COVER_STEM),
-                                L(note_beam_start.0, note_beam_start.1 + BEAM_HEIGHT - BEAM_COVER_STEM),
+                                M(note_beam_start.0, note_beam_start.1),
+                                L(note_beam_end.0 + STEM_WIDTH, note_beam_end.1),
+                                L(note_beam_end.0 + STEM_WIDTH, note_beam_end.1 + BEAM_HEIGHT),
+                                L(note_beam_start.0, note_beam_start.1 + BEAM_HEIGHT),
                                 Z,
                             ];
 
-                            items.push(Path(PathSegments(test_path).move_path(0.0, 0.0), NoStroke, Fillstyle(Black)));
+                            let y_adjust = match data.direction {
+                                DirUD::Down => -BEAM_HEIGHT + BEAM_COVER_STEM,
+                                DirUD::Up => -BEAM_COVER_STEM,
+                            };
+
+                            items.push(Path(PathSegments(test_path).move_path(0.0, y_adjust), NoStroke, Fillstyle(Black)));
+
+                            //-----------------------------------
+                            // middle notes
+                            let (beam_width, beam_height) = (note_beam_end.0 - note_beam_start.0, note_beam_end.1 - note_beam_start.1);
+                            for (middleidx, (middle_x, middle_data)) in note_middles_data.iter().enumerate() {
+                                let middle_x = *middle_x
+                                    - match data.direction {
+                                        DirUD::Down => 0.0,
+                                        DirUD::Up => STEM_WIDTH,
+                                    };
+
+                                let fraction = (middle_x - note_beam_start.0) / beam_width;
+                                let stem_y = match data.direction {
+                                    DirUD::Up => note_beam_start.1 - (beam_height * fraction) * data.direction.sign(),
+                                    DirUD::Down => middle_data.top_level as f32 * SPACE_HALF,
+                                };
+                                let stem_y2 = match data.direction {
+                                    DirUD::Up => middle_data.bottom_level as f32 * SPACE_HALF,
+                                    DirUD::Down => note_beam_start.1 + (beam_height * fraction) * data.direction.sign(),
+                                };
+                                let stem_height = stem_y2 - stem_y;
+                                let nrect = NRectExt::new(NRect::new(middle_x, stem_y, STEM_WIDTH, stem_height), NRectType::DevStem("black".to_string()));
+                                items.push(next2graphic(&nrect, 0.0, row.y).unwrap());
+                            }
+                            dbg!(note_beam_end);
                         }
                         _ => {}
                     },
 
-                    RItemBeam::Middle(id, a, b) => {
-                        println!("Middle {} {} {}", id, a, b);
+                    RItemBeam::Middle(data) => {
+                        // println!("Middle {} {} {}", id, a, b);
+
+                        let adjustment_x: f32 = if let Some(adjustment_x) = data.adjustment_x {
+                            match adjustment_x {
+                                ComplexXAdjustment::UpperRight(upper_right) => upper_right,
+                                _ => 0.0,
+                            }
+                        } else {
+                            0.0
+                        };
+
+                        let head_x = match data.direction {
+                            DirUD::Down => 0.0,
+                            DirUD::Up => data.head_width,
+                        };
+
+                        note_middles_data.push((item.coords.unwrap().0 + adjustment_x + head_x, data.clone()));
                     }
                     _ => {}
                 }
@@ -241,12 +278,12 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                 match &item.note2_beam {
                     RItemBeam::Single(data) | RItemBeam::Start(data) | RItemBeam::End(data) => match &item.note2_beam {
                         RItemBeam::Single(data) => {
-                            println!("Single - do noting already done");
+                            println!("Single - do noting, already done");
                         }
                         RItemBeam::Start(data) => {
                             let (beam_x, beam_y, beam_y2) = item.note2_beam_xyy2.unwrap();
                             // note2_beam_start = (item_x + beam_x, item_y + beam_y2, item_y + beam_y);
-
+                            note2_middles_data = vec![];
                             note2_beam_start = match data.direction {
                                 DirUD::Down => (item_x + beam_x, item_y + beam_y2, item_y + beam_y),
                                 DirUD::Up => (item_x + beam_x, item_y + beam_y, item_y + beam_y2),
@@ -271,12 +308,50 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                             ];
 
                             items.push(Path(PathSegments(test_path).move_path(0.0, 0.0), NoStroke, Fillstyle(Black)));
+
+                            //-----------------------------------
+                            // middle notes
+                            let (beam_width, beam_height) = (note2_beam_end.0 - note2_beam_start.0, note2_beam_end.1 - note2_beam_start.1);
+                            for (middleidx, (middle_x, middle_data)) in note2_middles_data.iter().enumerate() {
+                                let middle_x = *middle_x
+                                    - match data.direction {
+                                        DirUD::Down => 0.0,
+                                        DirUD::Up => STEM_WIDTH,
+                                    };
+
+                                let fraction = (middle_x - note2_beam_start.0) / beam_width;
+                                let stem_y = match data.direction {
+                                    DirUD::Up => note2_beam_start.1 - (beam_height * fraction) * data.direction.sign(),
+                                    DirUD::Down => middle_data.top_level as f32 * SPACE_HALF,
+                                };
+                                let stem_y2 = match data.direction {
+                                    DirUD::Up => middle_data.bottom_level as f32 * SPACE_HALF,
+                                    DirUD::Down => note2_beam_start.1 + (beam_height * fraction) * data.direction.sign(),
+                                };
+                                let stem_height = stem_y2 - stem_y;
+                                let nrect = NRectExt::new(NRect::new(middle_x, stem_y, STEM_WIDTH, stem_height), NRectType::DevStem("black".to_string()));
+                                items.push(next2graphic(&nrect, 0.0, row.y).unwrap());
+                            }
                         }
                         _ => {}
                     },
 
-                    RItemBeam::Middle(id, a, b) => {
-                        println!("Middle {} {} {}", id, a, b);
+                    RItemBeam::Middle(data) => {
+                        let adjustment_x: f32 = if let Some(adjustment_x) = data.adjustment_x {
+                            match adjustment_x {
+                                ComplexXAdjustment::UpperRight(upper_right) => upper_right,
+                                _ => 0.0,
+                            }
+                        } else {
+                            0.0
+                        };
+
+                        let head_x = match data.direction {
+                            DirUD::Down => 0.0,
+                            DirUD::Up => data.head_width,
+                        };
+
+                        note2_middles_data.push((item.coords.unwrap().0 + adjustment_x + head_x, data.clone()));
                     }
                     _ => {}
                 }
