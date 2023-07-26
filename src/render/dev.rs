@@ -235,8 +235,6 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                                     DirUD::Down => middle_data.top_level as f32 * SPACE_HALF,
                                 };
 
-                                dbg!(stem_y, stem_tip_y);
-
                                 let stem_y2 = match data.direction {
                                     DirUD::Up => middle_data.bottom_level as f32 * SPACE_HALF,
                                     DirUD::Down => note_beam_start.1 + (beam_height * fraction) * data.direction.sign(),
