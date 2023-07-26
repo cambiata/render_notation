@@ -113,6 +113,8 @@ pub fn next2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<GraphicIte
         }
 
         NRectType::DUMMY => None,
+
+        NRectType::Spacer => None,
     }
 }
 
@@ -170,12 +172,11 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
 
         let mut note_beam_start: (f32, f32, f32) = (0., 0., 0.);
         let mut note_beam_end: (f32, f32, f32) = (0., 0., 0.);
-        // let mut note_middles_data: Vec<RItemBeamData> = vec![];
         let mut note_middles_data: Vec<(f32, RItemBeamData)> = vec![];
-        let mut note2_middles_data: Vec<(f32, RItemBeamData)> = vec![];
 
         let mut note2_beam_start: (f32, f32, f32) = (0., 0., 0.);
         let mut note2_beam_end: (f32, f32, f32) = (0., 0., 0.);
+        let mut note2_middles_data: Vec<(f32, RItemBeamData)> = vec![];
 
         for item in &row.items {
             if let Some(item) = item {
@@ -183,8 +184,18 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                 // upper beams
                 let NPoint(item_x, item_y) = item.coords.expect("RItem coords should always be calculated!");
 
+                //------------------------------------------------------------------
+
+                match &item.note_beam {
+                    RItemBeam::Start(data) => {}
+                    RItemBeam::Middle(data) => {}
+                    RItemBeam::End(data) => {}
+                    _ => {}
+                }
+
                 //=================================================================
                 // upper voice
+
                 match &item.note_beam {
                     RItemBeam::Single(data) | RItemBeam::Start(data) | RItemBeam::End(data) => match &item.note_beam {
                         RItemBeam::Start(data) => {
@@ -196,7 +207,10 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                             };
                         }
                         RItemBeam::End(data) => {
+                            println!("END note :{} {:?}", data.id, data.note_durations);
                             let (beam_x, beam_y, beam_y2) = item.note_beam_xyy2.unwrap();
+
+                            // println!("note_middles_data length:{}", note_middles_data.len());
 
                             note_beam_end = match data.direction {
                                 DirUD::Down => (item_x + beam_x, item_y + beam_y2, item_y + beam_y),
@@ -248,26 +262,14 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                     },
 
                     RItemBeam::Middle(data) => {
-                        let adjustment_x: f32 = if let Some(adjustment_x) = data.adjustment_x {
-                            match adjustment_x {
-                                ComplexXAdjustment::UpperRight(upper_right) => upper_right,
-                                _ => 0.0,
-                            }
-                        } else {
-                            0.0
-                        };
-                        let head_x = match data.direction {
-                            DirUD::Down => 0.0,
-                            DirUD::Up => data.head_width,
-                        };
-
-                        note_middles_data.push((item.coords.unwrap().0 + adjustment_x + head_x, data.clone()));
+                        note_middles_data.push((item.coords.unwrap().0 + get_head_x_adjustment(data), data.clone()));
                     }
                     _ => {}
                 }
 
                 //=================================================================
                 // lower voice
+
                 match &item.note2_beam {
                     RItemBeam::Single(data) | RItemBeam::Start(data) | RItemBeam::End(data) => match &item.note2_beam {
                         RItemBeam::Start(data) => {
@@ -280,6 +282,8 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                             };
                         }
                         RItemBeam::End(data) => {
+                            println!("END note2 :{} {:?}", data.id, data.note_durations);
+
                             let (beam_x, beam_y, beam_y2) = item.note2_beam_xyy2.unwrap();
 
                             note2_beam_end = match data.direction {
@@ -326,21 +330,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                     },
 
                     RItemBeam::Middle(data) => {
-                        let adjustment_x: f32 = if let Some(adjustment_x) = data.adjustment_x {
-                            match adjustment_x {
-                                ComplexXAdjustment::UpperRight(upper_right) => upper_right,
-                                _ => 0.0,
-                            }
-                        } else {
-                            0.0
-                        };
-
-                        let head_x = match data.direction {
-                            DirUD::Down => 0.0,
-                            DirUD::Up => data.head_width,
-                        };
-
-                        note2_middles_data.push((item.coords.unwrap().0 + adjustment_x + head_x, data.clone()));
+                        note2_middles_data.push((item.coords.unwrap().0 + get_head_x_adjustment(data), data.clone()));
                     }
                     _ => {}
                 }
@@ -351,4 +341,23 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
     dbg!(matrix.width, matrix.height);
     let svg = SvgBuilder::new().build(items).unwrap();
     std::fs::write(svg_filename, svg).unwrap();
+}
+
+fn do_beams(beam_start: (f32, f32, f32), beam_end: (f32, f32, f32)) {}
+
+fn get_head_x_adjustment(data: &RItemBeamData) -> f32 {
+    let adjustment_x: f32 = if let Some(adjustment_x) = data.adjustment_x {
+        match adjustment_x {
+            ComplexXAdjustment::UpperRight(upper_right) => upper_right,
+            _ => 0.0,
+        }
+    } else {
+        0.0
+    };
+    let head_x = match data.direction {
+        DirUD::Down => 0.0,
+        DirUD::Up => data.head_width,
+    };
+
+    adjustment_x + head_x
 }
