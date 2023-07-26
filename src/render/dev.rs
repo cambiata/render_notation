@@ -193,12 +193,22 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                         }
                         RItemBeam::Start(data) => {
                             let (beam_x, beam_y, beam_y2) = item.note_beam_xyy2.unwrap();
-                            note_beam_start = (item_x + beam_x, item_y + beam_y, item_y + beam_y2);
+
+                            note_beam_start = match data.direction {
+                                DirUD::Down => (item_x + beam_x, item_y + beam_y2, item_y + beam_y),
+                                DirUD::Up => (item_x + beam_x, item_y + beam_y, item_y + beam_y2),
+                            };
+
+                            // (item_x + beam_x, item_y + beam_y, item_y + beam_y2);
                         }
                         RItemBeam::End(data) => {
                             println!("End {} {:?}", data.id, note_beam_start);
                             let (beam_x, beam_y, beam_y2) = item.note_beam_xyy2.unwrap();
-                            note_beam_end = (item_x + beam_x, item_y + beam_y, item_y + beam_y2);
+
+                            note_beam_end = match data.direction {
+                                DirUD::Down => (item_x + beam_x, item_y + beam_y2, item_y + beam_y),
+                                DirUD::Up => (item_x + beam_x, item_y + beam_y, item_y + beam_y2),
+                            };
 
                             // // start dot
                             // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "red".to_string()));
@@ -239,24 +249,21 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                         }
                         RItemBeam::Start(data) => {
                             let (beam_x, beam_y, beam_y2) = item.note2_beam_xyy2.unwrap();
-                            note2_beam_start = (item_x + beam_x, item_y + beam_y2, item_y + beam_y);
+                            // note2_beam_start = (item_x + beam_x, item_y + beam_y2, item_y + beam_y);
+
+                            note2_beam_start = match data.direction {
+                                DirUD::Down => (item_x + beam_x, item_y + beam_y2, item_y + beam_y),
+                                DirUD::Up => (item_x + beam_x, item_y + beam_y, item_y + beam_y2),
+                            };
                         }
                         RItemBeam::End(data) => {
                             println!("End {} {:?}", data.id, note2_beam_start);
                             let (beam_x, beam_y, beam_y2) = item.note2_beam_xyy2.unwrap();
-                            note2_beam_end = (item_x + beam_x, item_y + beam_y2, item_y + beam_y);
 
-                            // // start dot
-                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "red".to_string()));
-                            // items.push(next2graphic(&nrect, note2_beam_start.0, note2_beam_start.1).unwrap());
-                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "lime".to_string()));
-                            // items.push(next2graphic(&nrect, note2_beam_start.0, note2_beam_start.2).unwrap());
-
-                            // // end dot
-                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "red".to_string()));
-                            // items.push(next2graphic(&nrect, note2_beam_end.0, note2_beam_end.1).unwrap());
-                            // let nrect = NRectExt::new(NRect::new(-5., -5., 10.0, 10.0), NRectType::Dev(true, "lime".to_string()));
-                            // items.push(next2graphic(&nrect, note2_beam_end.0, note2_beam_end.2).unwrap());
+                            note2_beam_end = match data.direction {
+                                DirUD::Down => (item_x + beam_x, item_y + beam_y2, item_y + beam_y),
+                                DirUD::Up => (item_x + beam_x, item_y + beam_y, item_y + beam_y2),
+                            };
 
                             use PathSegment::*;
                             let test_path = vec![
