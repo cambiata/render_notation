@@ -183,13 +183,10 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                 // upper beams
                 let NPoint(item_x, item_y) = item.coords.expect("RItem coords should always be calculated!");
 
-                // do_beam(&item, &item.note_beam, note_beam_start);
-
+                //=================================================================
+                // upper voice
                 match &item.note_beam {
                     RItemBeam::Single(data) | RItemBeam::Start(data) | RItemBeam::End(data) => match &item.note_beam {
-                        RItemBeam::Single(data) => {
-                            println!("Single - do noting already done");
-                        }
                         RItemBeam::Start(data) => {
                             let (beam_x, beam_y, beam_y2) = item.note_beam_xyy2.unwrap();
                             note_middles_data = vec![];
@@ -197,11 +194,8 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                                 DirUD::Down => (item_x + beam_x, item_y + beam_y2, item_y + beam_y),
                                 DirUD::Up => (item_x + beam_x, item_y + beam_y, item_y + beam_y2),
                             };
-
-                            // (item_x + beam_x, item_y + beam_y, item_y + beam_y2);
                         }
                         RItemBeam::End(data) => {
-                            println!("End {} {:?}", data.id, note_beam_start);
                             let (beam_x, beam_y, beam_y2) = item.note_beam_xyy2.unwrap();
 
                             note_beam_end = match data.direction {
@@ -240,6 +234,9 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                                     DirUD::Up => note_beam_start.1 - (beam_height * fraction) * data.direction.sign(),
                                     DirUD::Down => middle_data.top_level as f32 * SPACE_HALF,
                                 };
+
+                                dbg!(stem_y, stem_tip_y);
+
                                 let stem_y2 = match data.direction {
                                     DirUD::Up => middle_data.bottom_level as f32 * SPACE_HALF,
                                     DirUD::Down => note_beam_start.1 + (beam_height * fraction) * data.direction.sign(),
@@ -248,14 +245,11 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                                 let nrect = NRectExt::new(NRect::new(middle_x, stem_y, STEM_WIDTH, stem_height), NRectType::DevStem("black".to_string()));
                                 items.push(next2graphic(&nrect, 0.0, row.y).unwrap());
                             }
-                            dbg!(note_beam_end);
                         }
                         _ => {}
                     },
 
                     RItemBeam::Middle(data) => {
-                        // println!("Middle {} {} {}", id, a, b);
-
                         let adjustment_x: f32 = if let Some(adjustment_x) = data.adjustment_x {
                             match adjustment_x {
                                 ComplexXAdjustment::UpperRight(upper_right) => upper_right,
@@ -264,7 +258,6 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                         } else {
                             0.0
                         };
-
                         let head_x = match data.direction {
                             DirUD::Down => 0.0,
                             DirUD::Up => data.head_width,
@@ -275,11 +268,10 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                     _ => {}
                 }
 
+                //=================================================================
+                // lower voice
                 match &item.note2_beam {
                     RItemBeam::Single(data) | RItemBeam::Start(data) | RItemBeam::End(data) => match &item.note2_beam {
-                        RItemBeam::Single(data) => {
-                            println!("Single - do noting, already done");
-                        }
                         RItemBeam::Start(data) => {
                             let (beam_x, beam_y, beam_y2) = item.note2_beam_xyy2.unwrap();
                             // note2_beam_start = (item_x + beam_x, item_y + beam_y2, item_y + beam_y);
@@ -290,7 +282,6 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                             };
                         }
                         RItemBeam::End(data) => {
-                            println!("End {} {:?}", data.id, note2_beam_start);
                             let (beam_x, beam_y, beam_y2) = item.note2_beam_xyy2.unwrap();
 
                             note2_beam_end = match data.direction {
