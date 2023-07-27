@@ -1,4 +1,4 @@
-use std::cell::Ref;
+use std::{arch::x86_64::_SIDD_LEAST_SIGNIFICANT, cell::Ref};
 
 use graphics::prelude::*;
 use notation_rs::prelude::*;
@@ -70,7 +70,7 @@ pub fn next2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<GraphicIte
 
         NRectType::WIP(msg) => {
             //
-            println!("WIP:{}", msg);
+            // println!("WIP:{}", msg);
             None //Some(Path(PathSegments(CADENZA_3.to_vec()).inv01(), NoStroke, Fillstyle(Black)))
         }
 
@@ -129,7 +129,7 @@ pub fn five_lines(w: f32) -> GraphicItems {
 }
 
 pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
-    let mut items = GraphicItems::new();
+    let mut graphic_items = GraphicItems::new();
     for col in matrix.cols.iter() {
         let col = col.borrow();
         let mut rowidx = 0;
@@ -147,11 +147,11 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                     let color = if col.duration == 0 { "orange" } else { "lightgray" };
                     let frame_nrect = NRectExt::new(frame_rect, NRectType::Dev(false, color.to_string()));
                     let frame_item = next2graphic(&frame_nrect, coords.0, coords.1).unwrap();
-                    items.push(frame_item);
+                    graphic_items.push(frame_item);
 
                     // glyph rect
                     if let Some(graphic_item) = next2graphic(&nrect, coords.0, coords.1) {
-                        items.push(graphic_item);
+                        graphic_items.push(graphic_item);
                     }
                     // let graphic_item = next2graphic(&nrect, coords.0, coords.1).unwrap();
                 }
@@ -161,7 +161,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                 let rect = NRect::new(0., 0., 10.0, 10.0);
                 let nrect = NRectExt::new(rect, NRectType::Dev(true, "gray".to_string()));
                 let graphic_item = next2graphic(&nrect, x, y).unwrap();
-                items.push(graphic_item);
+                graphic_items.push(graphic_item);
             }
             rowidx += 1;
         }
@@ -178,18 +178,30 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
         let mut note2_beam_end: (f32, f32, f32) = (0., 0., 0.);
         let mut note2_middles_data: Vec<(f32, RItemBeamData)> = vec![];
 
+        let mut notedata: Vec<(RItemBeamData, NPoint)> = vec![];
+        let mut note2data: Vec<(RItemBeamData, NPoint)> = vec![];
+
         for item in &row.items {
             if let Some(item) = item {
                 let item: Ref<RItem> = item.borrow();
                 // upper beams
                 let NPoint(item_x, item_y) = item.coords.expect("RItem coords should always be calculated!");
-
                 //------------------------------------------------------------------
-
                 match &item.note_beam {
-                    RItemBeam::Start(data) => {}
-                    RItemBeam::Middle(data) => {}
-                    RItemBeam::End(data) => {}
+                    RItemBeam::Single(data) => {
+                        graphic_items.extend(do_beams(&notedata));
+                    }
+                    RItemBeam::Start(data) => {
+                        notedata = vec![];
+                        notedata.push((data.clone(), item.coords.unwrap()));
+                    }
+                    RItemBeam::Middle(data) => {
+                        notedata.push((data.clone(), item.coords.unwrap()));
+                    }
+                    RItemBeam::End(data) => {
+                        notedata.push((data.clone(), item.coords.unwrap()));
+                        graphic_items.extend(do_beams(&notedata));
+                    }
                     _ => {}
                 }
 
@@ -207,7 +219,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                             };
                         }
                         RItemBeam::End(data) => {
-                            println!("END note :{} {:?}", data.id, data.note_durations);
+                            // println!("END note :{} {:?}", data.id, data.note_durations);
                             let (beam_x, beam_y, beam_y2) = item.note_beam_xyy2.unwrap();
 
                             // println!("note_middles_data length:{}", note_middles_data.len());
@@ -231,7 +243,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                                 DirUD::Up => -BEAM_COVER_STEM,
                             };
 
-                            items.push(Path(PathSegments(test_path).move_path(0.0, y_adjust), NoStroke, Fillstyle(Black)));
+                            // graphic_items.push(Path(PathSegments(test_path).move_path(0.0, y_adjust), NoStroke, Fillstyle(Black)));
 
                             //-----------------------------------
                             // middle notes
@@ -255,7 +267,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                                 };
                                 let stem_height = stem_y2 - stem_y;
                                 let nrect = NRectExt::new(NRect::new(middle_x, stem_y, STEM_WIDTH, stem_height), NRectType::DevStem("black".to_string()));
-                                items.push(next2graphic(&nrect, 0.0, row.y).unwrap());
+                                // graphic_items.push(next2graphic(&nrect, 0.0, row.y).unwrap());
                             }
                         }
                         _ => {}
@@ -282,7 +294,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                             };
                         }
                         RItemBeam::End(data) => {
-                            println!("END note2 :{} {:?}", data.id, data.note_durations);
+                            // println!("END note2 :{} {:?}", data.id, data.note_durations);
 
                             let (beam_x, beam_y, beam_y2) = item.note2_beam_xyy2.unwrap();
 
@@ -300,7 +312,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                                 Z,
                             ];
 
-                            items.push(Path(PathSegments(test_path).move_path(0.0, 0.0), NoStroke, Fillstyle(Black)));
+                            // graphic_items.push(Path(PathSegments(test_path).move_path(0.0, 0.0), NoStroke, Fillstyle(Black)));
 
                             //-----------------------------------
                             // middle notes
@@ -323,7 +335,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                                 };
                                 let stem_height = stem_y2 - stem_y;
                                 let nrect = NRectExt::new(NRect::new(middle_x, stem_y, STEM_WIDTH, stem_height), NRectType::DevStem("black".to_string()));
-                                items.push(next2graphic(&nrect, 0.0, row.y).unwrap());
+                                graphic_items.push(next2graphic(&nrect, 0.0, row.y).unwrap());
                             }
                         }
                         _ => {}
@@ -339,11 +351,9 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
     }
 
     dbg!(matrix.width, matrix.height);
-    let svg = SvgBuilder::new().build(items).unwrap();
+    let svg = SvgBuilder::new().build(graphic_items).unwrap();
     std::fs::write(svg_filename, svg).unwrap();
 }
-
-fn do_beams(beam_start: (f32, f32, f32), beam_end: (f32, f32, f32)) {}
 
 fn get_head_x_adjustment(data: &RItemBeamData) -> f32 {
     let adjustment_x: f32 = if let Some(adjustment_x) = data.adjustment_x {
@@ -360,4 +370,147 @@ fn get_head_x_adjustment(data: &RItemBeamData) -> f32 {
     };
 
     adjustment_x + head_x
+}
+
+fn do_beams(items: &Vec<(RItemBeamData, NPoint)>) -> GraphicItems {
+    let mut graphic_items = GraphicItems::new();
+
+    match items.len() {
+        0 => {
+            panic!("do_beams: items.len() == 0");
+        }
+        1 => {
+            println!("Single beam item");
+        }
+        _ => {
+            // println!("Multiple beam item - items.len():{}", items.len());
+            let last_idx = items.len() - 1;
+
+            let first_data: &RItemBeamData = &items[0].0;
+            let direction_sign = first_data.direction.sign();
+            let first_coords = (*&items[0].1 .0 + get_head_x_adjustment(first_data), *&items[0].1 .1);
+            let first_tip_y = first_coords.1 + (first_data.tip_level * SPACE_HALF) + (STEM_LENGTH * SPACE_HALF) * direction_sign;
+            let first_bop_y = first_coords.1
+                + match first_data.direction {
+                    DirUD::Down => first_data.bottom_level as f32 * SPACE_HALF,
+                    DirUD::Up => first_data.top_level as f32 * SPACE_HALF,
+                };
+
+            // let nrect = NRectExt::new(NRect::new(-5., -5., 10., 10.), NRectType::DevStem("lime".to_string()));
+            // graphic_items.push(next2graphic(&nrect, first_coords.0, first_coords.1).unwrap());
+            // let nrect = NRectExt::new(NRect::new(-5., -5., 10., 10.), NRectType::DevStem("orange".to_string()));
+            // graphic_items.push(next2graphic(&nrect, first_coords.0, first_tip_y).unwrap());
+            // let nrect = NRectExt::new(NRect::new(-5., -5., 10., 10.), NRectType::DevStem("purple".to_string()));
+            // graphic_items.push(next2graphic(&nrect, first_coords.0, first_bop_y).unwrap());
+
+            let (rect_y, rect_y2, rect_h) = match first_data.direction {
+                DirUD::Down => (first_bop_y, first_tip_y, first_tip_y - first_bop_y),
+                DirUD::Up => (first_tip_y, first_bop_y, first_bop_y - first_tip_y),
+            };
+
+            // let nrect = NRectExt::new(NRect(0., 0., STEM_WIDTH, rect_h), NRectType::DevStem("blue".to_string()));
+
+            graphic_items.push(Line(first_coords.0, rect_y, first_coords.0, rect_y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
+
+            // graphic_items.push(next2graphic(&nrect, first_coords.0, rect_y).unwrap());
+
+            let last_data = &items[last_idx].0;
+            let last_coords = (*&items[last_idx].1 .0 + get_head_x_adjustment(last_data), *&items[last_idx].1 .1);
+            let last_tip_y = last_coords.1 + (last_data.tip_level * SPACE_HALF) + (STEM_LENGTH * SPACE_HALF) * direction_sign;
+            let last_bop_y = last_coords.1
+                + match last_data.direction {
+                    DirUD::Down => last_data.bottom_level as f32 * SPACE_HALF,
+                    DirUD::Up => last_data.top_level as f32 * SPACE_HALF,
+                };
+
+            // let nrect = NRectExt::new(NRect::new(-5., -5., 10., 10.), NRectType::DevStem("red".to_string()));
+            // graphic_items.push(next2graphic(&nrect, last_coords.0, last_coords.1).unwrap());
+            // let nrect = NRectExt::new(NRect::new(-5., -5., 10., 10.), NRectType::DevStem("orange".to_string()));
+            // graphic_items.push(next2graphic(&nrect, last_coords.0, last_tip_y).unwrap());
+            // let nrect = NRectExt::new(NRect::new(-5., -5., 10., 10.), NRectType::DevStem("purple".to_string()));
+            // graphic_items.push(next2graphic(&nrect, last_coords.0, last_bop_y).unwrap());
+
+            let (rect_y, rect_y2, rect_h) = match last_data.direction {
+                DirUD::Down => (last_bop_y, last_tip_y, last_tip_y - last_bop_y),
+                DirUD::Up => (last_tip_y, last_bop_y, last_bop_y - last_tip_y),
+            };
+
+            graphic_items.push(Line(last_coords.0, rect_y, last_coords.0, rect_y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
+
+            //================================================================
+            let beam_width = last_coords.0 - first_coords.0;
+            let beam_height = last_tip_y - first_tip_y;
+
+            let mut tip_coords: Vec<(f32, f32)> = vec![(first_coords.0, first_tip_y)];
+            if items.len() > 2 {
+                let middle_items = &items[1..last_idx];
+                for middle_item in middle_items {
+                    let middle_data = &middle_item.0;
+                    let middle_coords = (middle_item.1 .0 + get_head_x_adjustment(last_data), middle_item.1 .1);
+                    let nrect = NRectExt::new(NRect::new(-5., -5., 10., 10.), NRectType::DevStem("orange".to_string()));
+                    graphic_items.push(next2graphic(&nrect, middle_coords.0, middle_coords.1).unwrap());
+
+                    let fraction = (middle_coords.0 - first_coords.0) / beam_width;
+
+                    let middle_tip_y = middle_coords.1 + first_tip_y + (beam_height * fraction);
+                    let middle_bop_y = middle_coords.1
+                        + match middle_data.direction {
+                            DirUD::Down => middle_data.bottom_level as f32 * SPACE_HALF,
+                            DirUD::Up => middle_data.top_level as f32 * SPACE_HALF,
+                        };
+
+                    let (rect_y, rect_y2, rect_h) = match middle_data.direction {
+                        DirUD::Down => (middle_bop_y, middle_tip_y, middle_tip_y - middle_bop_y),
+                        DirUD::Up => (middle_tip_y, middle_bop_y, middle_bop_y - middle_tip_y),
+                    };
+
+                    graphic_items.push(Line(middle_coords.0, rect_y, middle_coords.0, rect_y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
+                    tip_coords.push((middle_coords.0, middle_tip_y));
+                }
+            }
+            tip_coords.push((last_coords.0, last_tip_y));
+            let sub_beam_graphic_items = do_sub_beams(beam_width, beam_height, &tip_coords, last_data.direction, &last_data.note_durations.as_ref().unwrap());
+            graphic_items.extend(sub_beam_graphic_items);
+
+            // dbg!(last_coords);
+        }
+    }
+
+    graphic_items
+    //
+}
+
+fn do_sub_beams(beam_width: f32, beam_height: f32, tip_coords: &Vec<(f32, f32)>, direction: DirUD, durations: &Vec<Duration>) -> GraphicItems {
+    let mut graphic_items = GraphicItems::new();
+    let lastidx = tip_coords.len() - 1;
+    let beamtypes = durations_to_beamtypes(durations);
+
+    let sixteenths_y = tip_coords.iter().map(|(x, y)| *y + BEAM_SUB_DISTANCE * -direction.sign()).collect::<Vec<f32>>();
+
+    graphic_items.push(Line(
+        tip_coords[0].0,
+        tip_coords[0].1,
+        tip_coords[lastidx].0,
+        tip_coords[lastidx].1,
+        Strokestyle(DEV_LINE_THICKNESS, Blue),
+    ));
+
+    graphic_items.push(Line(
+        tip_coords[0].0,
+        sixteenths_y[0],
+        tip_coords[lastidx].0,
+        sixteenths_y[lastidx],
+        Strokestyle(DEV_LINE_THICKNESS, Blue),
+    ));
+
+    match durations.as_slice() {
+        [NV16, NV16] | [NV16, NV16, NV16] | [NV16, NV16, NV16, NV16] => {
+            println!("SEXTONDELAR");
+        }
+
+        _ => println!("Unhandled durastions for sub_beaming"),
+    }
+
+    // graphic_items.push(Line(0., 0., 20., 20., Strokestyle(DEV_LINE_THICKNESS, Red)));
+    graphic_items
 }
