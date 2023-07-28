@@ -204,6 +204,23 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                     }
                     _ => {}
                 }
+                match &item.note2_beam {
+                    RItemBeam::Single(data) => {
+                        graphic_items.extend(do_beams(&note2data));
+                    }
+                    RItemBeam::Start(data) => {
+                        note2data = vec![];
+                        note2data.push((data.clone(), item.coords.unwrap()));
+                    }
+                    RItemBeam::Middle(data) => {
+                        note2data.push((data.clone(), item.coords.unwrap()));
+                    }
+                    RItemBeam::End(data) => {
+                        note2data.push((data.clone(), item.coords.unwrap()));
+                        graphic_items.extend(do_beams(&note2data));
+                    }
+                    _ => {}
+                }
 
                 //=================================================================
                 // upper voice
@@ -333,6 +350,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                                     DirUD::Up => middle_data.bottom_level as f32 * SPACE_HALF,
                                     DirUD::Down => note2_beam_start.1 + (beam_height * fraction) * data.direction.sign(),
                                 };
+
                                 let stem_height = stem_y2 - stem_y;
                                 let nrect = NRectExt::new(NRect::new(middle_x, stem_y, STEM_WIDTH, stem_height), NRectType::DevStem("black".to_string()));
                                 graphic_items.push(next2graphic(&nrect, 0.0, row.y).unwrap());
@@ -457,7 +475,6 @@ fn do_beams(items: &Vec<(RItemBeamData, NPoint)>) -> GraphicItems {
     }
 
     graphic_items
-    //
 }
 
 fn do_sub_beams(beam_width: f32, beam_height: f32, tip_coords: &Vec<(f32, f32, f32)>, direction: DirUD, durations: &Vec<Duration>) -> GraphicItems {
@@ -496,6 +513,7 @@ fn do_sub_beams(beam_width: f32, beam_height: f32, tip_coords: &Vec<(f32, f32, f
         }
         [B8, B16] | [B8, B16, B8] => graphic_items.extend(do_sub_sixteen_rightside(sixteenths[0], sixteenths[1])),
         [B16, B8] => graphic_items.extend(do_sub_sixteen_leftside(sixteenths[0], sixteenths[1])),
+        [B16, B16, B8] | [B16, B16, B8, B8] => graphic_items.extend(do_sub_sixteen(sixteenths[0], sixteenths[1])),
         [B16, B8, B16] => {
             graphic_items.extend(do_sub_sixteen_leftside(sixteenths[0], sixteenths[1]));
             graphic_items.extend(do_sub_sixteen_rightside(sixteenths[1], sixteenths[2]))
