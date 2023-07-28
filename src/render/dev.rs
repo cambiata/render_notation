@@ -1,4 +1,4 @@
-use std::{arch::x86_64::_SIDD_LEAST_SIGNIFICANT, cell::Ref};
+use std::{arch::x86_64::_SIDD_LEAST_SIGNIFICANT, cell::Ref, fmt::DebugTuple};
 
 use graphics::prelude::*;
 use notation_rs::prelude::*;
@@ -155,9 +155,26 @@ pub fn five_lines(w: f32) -> GraphicItems {
 }
 
 pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
-    const DRAW_FRAMES: bool = true;
+    const DRAW_FRAMES: bool = false;
 
     let mut graphic_items = GraphicItems::new();
+
+    if let Some(bartemplate) = &matrix.bartemplate {
+        for (rowidx, row) in matrix.rows.iter().enumerate() {
+            let template = bartemplate.0[rowidx];
+            match template {
+                PartTemplate::Music => {
+                    let row = row.borrow();
+                    for i in -2..3 {
+                        let y = row.y + (i as f32) * SPACE;
+                        graphic_items.push(Line(0., y, matrix.width, y, Strokestyle(NOTELINES_WIDTH, Black)));
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
     for col in matrix.cols.iter() {
         let col = col.borrow();
         let mut rowidx = 0;
