@@ -1,7 +1,6 @@
-use std::{arch::x86_64::_SIDD_LEAST_SIGNIFICANT, cell::Ref, fmt::DebugTuple};
-
 use graphics::prelude::*;
 use notation_rs::prelude::*;
+use std::cell::Ref;
 
 use crate::render::fonts::ebgaramond::GLYPH_HEIGHT;
 
