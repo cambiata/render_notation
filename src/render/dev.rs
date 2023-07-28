@@ -337,12 +337,12 @@ fn do_beam(items: &Vec<(RItemBeamData, NPoint)>) -> GraphicItems {
             let first_tip_y = first_coords.1 + (first_data.tip_level * SPACE_HALF) + (STEM_LENGTH * SPACE_HALF) * direction_sign;
             let first_bop_y = first_coords.1
                 + match first_data.direction {
-                    DirUD::Down => first_data.bottom_level as f32 * SPACE_HALF + STEM_HEAD_CORRECTION,
-                    DirUD::Up => first_data.top_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
+                    DirUD::Up => first_data.bottom_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
+                    DirUD::Down => first_data.top_level as f32 * SPACE_HALF + STEM_HEAD_CORRECTION,
                 };
             let (rect_y, rect_y2, rect_h) = match first_data.direction {
-                DirUD::Down => (first_bop_y, first_tip_y, first_tip_y - first_bop_y),
                 DirUD::Up => (first_tip_y, first_bop_y, first_bop_y - first_tip_y),
+                DirUD::Down => (first_bop_y, first_tip_y, first_tip_y - first_bop_y),
             };
             graphic_items.push(Line(first_coords.0, rect_y, first_coords.0, rect_y2, Strokestyle(STEM_WIDTH, Black)));
 
@@ -352,12 +352,12 @@ fn do_beam(items: &Vec<(RItemBeamData, NPoint)>) -> GraphicItems {
             let last_tip_y = last_coords.1 + (last_data.tip_level * SPACE_HALF) + (STEM_LENGTH * SPACE_HALF) * direction_sign;
             let last_bop_y = last_coords.1
                 + match last_data.direction {
-                    DirUD::Down => last_data.bottom_level as f32 * SPACE_HALF + STEM_HEAD_CORRECTION,
-                    DirUD::Up => last_data.top_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
+                    DirUD::Up => last_data.bottom_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
+                    DirUD::Down => last_data.top_level as f32 * SPACE_HALF + STEM_HEAD_CORRECTION,
                 };
             let (rect_y, rect_y2, rect_h) = match last_data.direction {
-                DirUD::Down => (last_bop_y, last_tip_y, last_tip_y - last_bop_y),
                 DirUD::Up => (last_tip_y, last_bop_y, last_bop_y - last_tip_y),
+                DirUD::Down => (last_bop_y, last_tip_y, last_tip_y - last_bop_y),
             };
 
             graphic_items.push(Line(last_coords.0, rect_y, last_coords.0, rect_y2, Strokestyle(STEM_WIDTH, Black)));
@@ -387,8 +387,8 @@ fn do_beam(items: &Vec<(RItemBeamData, NPoint)>) -> GraphicItems {
 
                     let middle_bop_y = middle_coords.1
                         + match middle_data.direction {
-                            DirUD::Down => middle_data.bottom_level as f32 * SPACE_HALF + STEM_HEAD_CORRECTION,
-                            DirUD::Up => middle_data.top_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
+                            DirUD::Up => middle_data.bottom_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
+                            DirUD::Down => middle_data.top_level as f32 * SPACE_HALF + STEM_HEAD_CORRECTION,
                         };
 
                     let (rect_y, rect_y2, rect_h) = match middle_data.direction {
