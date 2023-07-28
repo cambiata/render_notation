@@ -50,16 +50,25 @@ pub fn next2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<GraphicIte
         NRectType::Flag(beamtype, direction) => {
             match direction {
                 DirUD::Up => match beamtype {
-                    // BeamType::B8 => Some(Path(PathSegments(CADENZA_44.to_vec()).inv01().move_path(r.0, r.1 + SPACE*2.0), NoStroke, Fillstyle(Black))),
-                    // BeamType::B16 => Some(Path(PathSegments(CADENZA_139.to_vec()).inv01().move_path(r.0, r.1), NoStroke, Fillstyle(Black))), // 139, 141
+                    BeamType::B8 => Some(Path(PathSegments(CADENZA_44.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1), NoStroke, Fillstyle(Black))),
+                    BeamType::B16 => Some(Path(PathSegments(CADENZA_139.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1), NoStroke, Fillstyle(Black))), // 139, 141
                     _ => None,
                     // B32 => 32,
                     // B64 => 34,
                 },
-                DirUD => match beamtype {
-                    // BeamType::B8 => Some(Path(PathSegments(CADENZA_44.to_vec()).inv01().move_path(r.0, r.1), NoStroke, Fillstyle(Black))),
-                    // BeamType::B16 => Some(Path(PathSegments(CADENZA_139.to_vec()).inv01().move_path(r.0, r.1), NoStroke, Fillstyle(Black))), // 139, 141
+                DirUD::Down => match beamtype {
+                    BeamType::B8 => Some(Path(
+                        PathSegments(CADENZA_43.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1 + SPACE * 3.0),
+                        NoStroke,
+                        Fillstyle(Black),
+                    )),
+                    BeamType::B16 => Some(Path(
+                        PathSegments(CADENZA_142.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1 + SPACE * 3.0),
+                        NoStroke,
+                        Fillstyle(Black),
+                    )), // 139, 141
                     _ => None,
+                },
             }
         }
 
@@ -163,7 +172,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
 
                     let color = "orange";
                     let frame_rect = nrect.0.clone();
-                    let color = if col.duration == 0 { "orange" } else { "lightgray" };
+                    let color = if col.duration == 0 { "orange" } else { "red" };
 
                     if col.duration == 0 || DRAW_FRAMES {
                         let frame_nrect = NRectExt::new(frame_rect, NRectType::Dev(false, color.to_string()));
@@ -396,26 +405,44 @@ fn do_sub_beams(beam_width: f32, beam_height: f32, tip_coords: &Vec<(f32, f32, f
     let (x, y, x2, y2) = (tip_coords[0].0 - STEM_WIDTH_HALF, tip_coords[0].1, tip_coords[lastidx].0 + STEM_WIDTH_HALF, tip_coords[lastidx].1);
     graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Blue)));
 
+    let beamheight = match direction {
+        DirUD::Down => -BEAM_HEIGHT,
+        DirUD::Up => BEAM_HEIGHT,
+    };
+
+    graphic_items.push(Path(
+        PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight)]),
+        Stroke::NoStroke,
+        Fillstyle(Black),
+    ));
+
     use BeamType::*;
     match beamtypes.as_slice() {
         [B16, B16] | [B16, B16, B16] | [B16, B16, B16, B16] => {
-            graphic_items.push(Line(
-                sixteenths[0].0,
-                sixteenths[0].1,
-                sixteenths[lastidx].0,
-                sixteenths[lastidx].1,
-                Strokestyle(DEV_LINE_THICKNESS, Blue),
+            let (x, y, x2, y2) = (sixteenths[0].0, sixteenths[0].1, sixteenths[lastidx].0, sixteenths[lastidx].1);
+
+            graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Blue)));
+
+            let beamheight = match direction {
+                DirUD::Down => -BEAM_HEIGHT,
+                DirUD::Up => BEAM_HEIGHT,
+            };
+
+            graphic_items.push(Path(
+                PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight)]),
+                Stroke::NoStroke,
+                Fillstyle(Black),
             ));
         }
-        [B8, B16] | [B8, B16, B8] => graphic_items.extend(do_sub_sixteen_rightside(sixteenths[0], sixteenths[1])),
-        [B16, B8] => graphic_items.extend(do_sub_sixteen_leftside(sixteenths[0], sixteenths[1])),
-        [B16, B16, B8] | [B16, B16, B8, B8] => graphic_items.extend(do_sub_sixteen(sixteenths[0], sixteenths[1])),
+        [B8, B16] | [B8, B16, B8] => graphic_items.extend(do_sub_sixteen_rightside(sixteenths[0], sixteenths[1], direction)),
+        [B16, B8] => graphic_items.extend(do_sub_sixteen_leftside(sixteenths[0], sixteenths[1], direction)),
+        [B16, B16, B8] | [B16, B16, B8, B8] => graphic_items.extend(do_sub_sixteen(sixteenths[0], sixteenths[1], direction)),
         [B16, B8, B16] => {
-            graphic_items.extend(do_sub_sixteen_leftside(sixteenths[0], sixteenths[1]));
-            graphic_items.extend(do_sub_sixteen_rightside(sixteenths[1], sixteenths[2]))
+            graphic_items.extend(do_sub_sixteen_leftside(sixteenths[0], sixteenths[1], direction));
+            graphic_items.extend(do_sub_sixteen_rightside(sixteenths[1], sixteenths[2], direction))
         }
         [B8, B16, B16] | [B8, B16, B16, B8] => {
-            graphic_items.extend(do_sub_sixteen(sixteenths[1], sixteenths[2]));
+            graphic_items.extend(do_sub_sixteen(sixteenths[1], sixteenths[2], direction));
         }
 
         _ => println!("Unhandled durastions for sub_beaming"),
@@ -424,7 +451,7 @@ fn do_sub_beams(beam_width: f32, beam_height: f32, tip_coords: &Vec<(f32, f32, f
     graphic_items
 }
 
-fn do_sub_sixteen_rightside(left: (f32, f32), right: (f32, f32)) -> GraphicItems {
+fn do_sub_sixteen_rightside(left: (f32, f32), right: (f32, f32), direction: DirUD) -> GraphicItems {
     let mut graphic_items = GraphicItems::new();
     let width = right.0 - left.0;
     let height = right.1 - left.1;
@@ -434,17 +461,41 @@ fn do_sub_sixteen_rightside(left: (f32, f32), right: (f32, f32)) -> GraphicItems
 
     let (x, y, x2, y2) = (tip_left_x - STEM_WIDTH_HALF, tip_left_y, right.0 + STEM_WIDTH_HALF, right.1);
     graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
+
+    let beamheight = match direction {
+        DirUD::Down => -BEAM_HEIGHT,
+        DirUD::Up => BEAM_HEIGHT,
+    };
+
+    graphic_items.push(Path(
+        PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight)]),
+        Stroke::NoStroke,
+        Fillstyle(Black),
+    ));
+
     graphic_items
 }
 
-fn do_sub_sixteen(left: (f32, f32), right: (f32, f32)) -> GraphicItems {
+fn do_sub_sixteen(left: (f32, f32), right: (f32, f32), direction: DirUD) -> GraphicItems {
     let mut graphic_items = GraphicItems::new();
     let (x, y, x2, y2) = (left.0 - STEM_WIDTH_HALF, left.1, right.0 + STEM_WIDTH_HALF, right.1);
     graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
+
+    let beamheight = match direction {
+        DirUD::Down => -BEAM_HEIGHT,
+        DirUD::Up => BEAM_HEIGHT,
+    };
+
+    graphic_items.push(Path(
+        PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight)]),
+        Stroke::NoStroke,
+        Fillstyle(Black),
+    ));
+
     graphic_items
 }
 
-fn do_sub_sixteen_leftside(left: (f32, f32), right: (f32, f32)) -> GraphicItems {
+fn do_sub_sixteen_leftside(left: (f32, f32), right: (f32, f32), direction: DirUD) -> GraphicItems {
     let mut graphic_items = GraphicItems::new();
     let width = right.0 - left.0;
     let height = right.1 - left.1;
@@ -453,6 +504,18 @@ fn do_sub_sixteen_leftside(left: (f32, f32), right: (f32, f32)) -> GraphicItems 
     let tip_left_x = left.0 + HEAD_WIDTH_BLACK;
     let tip_left_y = left.1 + (fraction * height);
     let (x, y, x2, y2) = (left.0 - STEM_WIDTH_HALF, left.1, tip_left_x + STEM_WIDTH_HALF, tip_left_y);
+
+    let beamheight = match direction {
+        DirUD::Down => -BEAM_HEIGHT,
+        DirUD::Up => BEAM_HEIGHT,
+    };
+
+    graphic_items.push(Path(
+        PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight)]),
+        Stroke::NoStroke,
+        Fillstyle(Black),
+    ));
+
     graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
     graphic_items
 }
