@@ -303,8 +303,8 @@ fn do_single(first_data: &RItemBeamData, coords: NPoint) -> GraphicItems {
     let first_tip_y = first_coords.1 + (first_data.tip_level * SPACE_HALF) + (STEM_LENGTH * SPACE_HALF) * direction_sign;
     let first_bop_y = first_coords.1
         + match first_data.direction {
-            DirUD::Down => first_data.bottom_level as f32 * SPACE_HALF + STEM_HEAD_CORRECTION,
-            DirUD::Up => first_data.top_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
+            DirUD::Up => first_data.bottom_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
+            DirUD::Down => first_data.top_level as f32 * SPACE_HALF + STEM_HEAD_CORRECTION,
         };
     let (rect_y, rect_y2, rect_h) = match first_data.direction {
         DirUD::Down => (first_bop_y, first_tip_y, first_tip_y - first_bop_y),
