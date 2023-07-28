@@ -46,6 +46,23 @@ pub fn next2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<GraphicIte
             };
             Some(Path(PathSegments(p).inv01().move_path(r.0, r.1 + y), NoStroke, Fillstyle(Black)))
         }
+
+        NRectType::Flag(beamtype, direction) => {
+            match direction {
+                DirUD::Up => match beamtype {
+                    // BeamType::B8 => Some(Path(PathSegments(CADENZA_44.to_vec()).inv01().move_path(r.0, r.1 + SPACE*2.0), NoStroke, Fillstyle(Black))),
+                    // BeamType::B16 => Some(Path(PathSegments(CADENZA_139.to_vec()).inv01().move_path(r.0, r.1), NoStroke, Fillstyle(Black))), // 139, 141
+                    _ => None,
+                    // B32 => 32,
+                    // B64 => 34,
+                },
+                DirUD => match beamtype {
+                    // BeamType::B8 => Some(Path(PathSegments(CADENZA_44.to_vec()).inv01().move_path(r.0, r.1), NoStroke, Fillstyle(Black))),
+                    // BeamType::B16 => Some(Path(PathSegments(CADENZA_139.to_vec()).inv01().move_path(r.0, r.1), NoStroke, Fillstyle(Black))), // 139, 141
+                    _ => None,
+            }
+        }
+
         NRectType::Clef(clef) => match clef {
             Clef::G => Some(Path(PathSegments(CADENZA_8.to_vec()).inv01().move_path(r.0, r.1 + 4.6 * SPACE), NoStroke, Fillstyle(Black))),
             Clef::F => Some(Path(PathSegments(CADENZA_33.to_vec()).inv01().move_path(r.0, r.1 + SPACE), NoStroke, Fillstyle(Black))),
@@ -114,7 +131,7 @@ pub fn next2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<GraphicIte
 
         NRectType::DUMMY => None,
 
-        NRectType::Spacer => None,
+        NRectType::Spacer(s) => None,
     }
 }
 
@@ -129,6 +146,8 @@ pub fn five_lines(w: f32) -> GraphicItems {
 }
 
 pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
+    const DRAW_FRAMES: bool = true;
+
     let mut graphic_items = GraphicItems::new();
     for col in matrix.cols.iter() {
         let col = col.borrow();
@@ -142,12 +161,15 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                 for nrect in nrects.iter() {
                     let nrect = nrect.borrow();
 
-                    // bounding rect - for development
+                    let color = "orange";
                     let frame_rect = nrect.0.clone();
                     let color = if col.duration == 0 { "orange" } else { "lightgray" };
-                    let frame_nrect = NRectExt::new(frame_rect, NRectType::Dev(false, color.to_string()));
-                    let frame_item = next2graphic(&frame_nrect, coords.0, coords.1).unwrap();
-                    graphic_items.push(frame_item);
+
+                    if col.duration == 0 || DRAW_FRAMES {
+                        let frame_nrect = NRectExt::new(frame_rect, NRectType::Dev(false, color.to_string()));
+                        let frame_item = next2graphic(&frame_nrect, coords.0, coords.1).unwrap();
+                        graphic_items.push(frame_item);
+                    }
 
                     // glyph rect
                     if let Some(graphic_item) = next2graphic(&nrect, coords.0, coords.1) {
@@ -188,8 +210,8 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                 let NPoint(item_x, item_y) = item.coords.expect("RItem coords should always be calculated!");
                 //------------------------------------------------------------------
                 match &item.note_beam {
-                    RItemBeam::Single(data) => {
-                        graphic_items.extend(do_beams(&notedata));
+                    RItemBeam::Single(ref data) => {
+                        graphic_items.extend(do_single(data, item.coords.unwrap()));
                     }
                     RItemBeam::Start(data) => {
                         notedata = vec![];
@@ -200,13 +222,13 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                     }
                     RItemBeam::End(data) => {
                         notedata.push((data.clone(), item.coords.unwrap()));
-                        graphic_items.extend(do_beams(&notedata));
+                        graphic_items.extend(do_beam(&notedata));
                     }
                     _ => {}
                 }
                 match &item.note2_beam {
                     RItemBeam::Single(data) => {
-                        graphic_items.extend(do_beams(&note2data));
+                        graphic_items.extend(do_single(data, item.coords.unwrap()));
                     }
                     RItemBeam::Start(data) => {
                         note2data = vec![];
@@ -217,150 +239,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                     }
                     RItemBeam::End(data) => {
                         note2data.push((data.clone(), item.coords.unwrap()));
-                        graphic_items.extend(do_beams(&note2data));
-                    }
-                    _ => {}
-                }
-
-                //=================================================================
-                // upper voice
-
-                match &item.note_beam {
-                    RItemBeam::Single(data) | RItemBeam::Start(data) | RItemBeam::End(data) => match &item.note_beam {
-                        RItemBeam::Start(data) => {
-                            let (beam_x, beam_y, beam_y2) = item.note_beam_xyy2.unwrap();
-                            note_middles_data = vec![];
-                            note_beam_start = match data.direction {
-                                DirUD::Down => (item_x + beam_x, item_y + beam_y2, item_y + beam_y),
-                                DirUD::Up => (item_x + beam_x, item_y + beam_y, item_y + beam_y2),
-                            };
-                        }
-                        RItemBeam::End(data) => {
-                            // println!("END note :{} {:?}", data.id, data.note_durations);
-                            let (beam_x, beam_y, beam_y2) = item.note_beam_xyy2.unwrap();
-
-                            // println!("note_middles_data length:{}", note_middles_data.len());
-
-                            note_beam_end = match data.direction {
-                                DirUD::Down => (item_x + beam_x, item_y + beam_y2, item_y + beam_y),
-                                DirUD::Up => (item_x + beam_x, item_y + beam_y, item_y + beam_y2),
-                            };
-
-                            use PathSegment::*;
-                            let test_path = vec![
-                                M(note_beam_start.0, note_beam_start.1),
-                                L(note_beam_end.0 + STEM_WIDTH, note_beam_end.1),
-                                L(note_beam_end.0 + STEM_WIDTH, note_beam_end.1 + BEAM_HEIGHT),
-                                L(note_beam_start.0, note_beam_start.1 + BEAM_HEIGHT),
-                                Z,
-                            ];
-
-                            let y_adjust = match data.direction {
-                                DirUD::Down => -BEAM_HEIGHT + BEAM_COVER_STEM,
-                                DirUD::Up => -BEAM_COVER_STEM,
-                            };
-
-                            // graphic_items.push(Path(PathSegments(test_path).move_path(0.0, y_adjust), NoStroke, Fillstyle(Black)));
-
-                            //-----------------------------------
-                            // middle notes
-                            let (beam_width, beam_height) = (note_beam_end.0 - note_beam_start.0, note_beam_end.1 - note_beam_start.1);
-                            for (middleidx, (middle_x, middle_data)) in note_middles_data.iter().enumerate() {
-                                let middle_x = *middle_x
-                                    - match data.direction {
-                                        DirUD::Down => 0.0,
-                                        DirUD::Up => STEM_WIDTH,
-                                    };
-
-                                let fraction = (middle_x - note_beam_start.0) / beam_width;
-                                let stem_y = match data.direction {
-                                    DirUD::Up => note_beam_start.1 - (beam_height * fraction) * data.direction.sign(),
-                                    DirUD::Down => middle_data.top_level as f32 * SPACE_HALF,
-                                };
-
-                                let stem_y2 = match data.direction {
-                                    DirUD::Up => middle_data.bottom_level as f32 * SPACE_HALF,
-                                    DirUD::Down => note_beam_start.1 + (beam_height * fraction) * data.direction.sign(),
-                                };
-                                let stem_height = stem_y2 - stem_y;
-                                let nrect = NRectExt::new(NRect::new(middle_x, stem_y, STEM_WIDTH, stem_height), NRectType::DevStem("black".to_string()));
-                                // graphic_items.push(next2graphic(&nrect, 0.0, row.y).unwrap());
-                            }
-                        }
-                        _ => {}
-                    },
-
-                    RItemBeam::Middle(data) => {
-                        note_middles_data.push((item.coords.unwrap().0 + get_head_x_adjustment(data), data.clone()));
-                    }
-                    _ => {}
-                }
-
-                //=================================================================
-                // lower voice
-
-                match &item.note2_beam {
-                    RItemBeam::Single(data) | RItemBeam::Start(data) | RItemBeam::End(data) => match &item.note2_beam {
-                        RItemBeam::Start(data) => {
-                            let (beam_x, beam_y, beam_y2) = item.note2_beam_xyy2.unwrap();
-                            // note2_beam_start = (item_x + beam_x, item_y + beam_y2, item_y + beam_y);
-                            note2_middles_data = vec![];
-                            note2_beam_start = match data.direction {
-                                DirUD::Down => (item_x + beam_x, item_y + beam_y2, item_y + beam_y),
-                                DirUD::Up => (item_x + beam_x, item_y + beam_y, item_y + beam_y2),
-                            };
-                        }
-                        RItemBeam::End(data) => {
-                            // println!("END note2 :{} {:?}", data.id, data.note_durations);
-
-                            let (beam_x, beam_y, beam_y2) = item.note2_beam_xyy2.unwrap();
-
-                            note2_beam_end = match data.direction {
-                                DirUD::Down => (item_x + beam_x, item_y + beam_y2, item_y + beam_y),
-                                DirUD::Up => (item_x + beam_x, item_y + beam_y, item_y + beam_y2),
-                            };
-
-                            use PathSegment::*;
-                            let test_path = vec![
-                                M(note2_beam_start.0, note2_beam_start.1 - BEAM_HEIGHT + BEAM_COVER_STEM),
-                                L(note2_beam_end.0 + STEM_WIDTH, note2_beam_end.1 - BEAM_HEIGHT + BEAM_COVER_STEM),
-                                L(note2_beam_end.0 + STEM_WIDTH, note2_beam_end.1 + BEAM_COVER_STEM),
-                                L(note2_beam_start.0, note2_beam_start.1 + BEAM_COVER_STEM),
-                                Z,
-                            ];
-
-                            // graphic_items.push(Path(PathSegments(test_path).move_path(0.0, 0.0), NoStroke, Fillstyle(Black)));
-
-                            //-----------------------------------
-                            // middle notes
-                            let (beam_width, beam_height) = (note2_beam_end.0 - note2_beam_start.0, note2_beam_end.1 - note2_beam_start.1);
-                            for (middleidx, (middle_x, middle_data)) in note2_middles_data.iter().enumerate() {
-                                let middle_x = *middle_x
-                                    - match data.direction {
-                                        DirUD::Down => 0.0,
-                                        DirUD::Up => STEM_WIDTH,
-                                    };
-
-                                let fraction = (middle_x - note2_beam_start.0) / beam_width;
-                                let stem_y = match data.direction {
-                                    DirUD::Up => note2_beam_start.1 - (beam_height * fraction) * data.direction.sign(),
-                                    DirUD::Down => middle_data.top_level as f32 * SPACE_HALF,
-                                };
-                                let stem_y2 = match data.direction {
-                                    DirUD::Up => middle_data.bottom_level as f32 * SPACE_HALF,
-                                    DirUD::Down => note2_beam_start.1 + (beam_height * fraction) * data.direction.sign(),
-                                };
-
-                                let stem_height = stem_y2 - stem_y;
-                                let nrect = NRectExt::new(NRect::new(middle_x, stem_y, STEM_WIDTH, stem_height), NRectType::DevStem("black".to_string()));
-                                graphic_items.push(next2graphic(&nrect, 0.0, row.y).unwrap());
-                            }
-                        }
-                        _ => {}
-                    },
-
-                    RItemBeam::Middle(data) => {
-                        note2_middles_data.push((item.coords.unwrap().0 + get_head_x_adjustment(data), data.clone()));
+                        graphic_items.extend(do_beam(&note2data));
                     }
                     _ => {}
                 }
@@ -373,24 +252,45 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
     std::fs::write(svg_filename, svg).unwrap();
 }
 
-fn get_head_x_adjustment(data: &RItemBeamData) -> f32 {
-    let adjustment_x: f32 = if let Some(adjustment_x) = data.adjustment_x {
-        match adjustment_x {
-            ComplexXAdjustment::UpperRight(upper_right) => upper_right,
-            _ => 0.0,
-        }
-    } else {
-        0.0
-    };
-    let head_x = match data.direction {
-        DirUD::Down => 0.0,
-        DirUD::Up => data.head_width,
+// fn get_head_x_adjustment(data: &RItemBeamData) -> f32 {
+//     let adjustment_x: f32 = if let Some(adjustment_x) = data.adjustment_x {
+//         match adjustment_x {
+//             ComplexXAdjustment::UpperRight(upper_right) => upper_right,
+//             _ => 0.0,
+//         }
+//     } else {
+//         0.0
+//     };
+//     let head_x = match data.direction {
+//         DirUD::Down => 0.0 + STEM_WIDTH / 2.0,
+//         DirUD::Up => data.head_width - STEM_WIDTH / 2.0,
+//     };
+
+//     adjustment_x + head_x
+// }
+
+fn do_single(first_data: &RItemBeamData, coords: NPoint) -> GraphicItems {
+    let mut graphic_items = GraphicItems::new();
+
+    let direction_sign = first_data.direction.sign();
+    let first_coords = (*&coords.0 + get_head_x_adjustment(first_data), *&coords.1);
+    let first_tip_y = first_coords.1 + (first_data.tip_level * SPACE_HALF) + (STEM_LENGTH * SPACE_HALF) * direction_sign;
+    let first_bop_y = first_coords.1
+        + match first_data.direction {
+            DirUD::Down => first_data.bottom_level as f32 * SPACE_HALF + STEM_HEAD_CORRECTION,
+            DirUD::Up => first_data.top_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
+        };
+    let (rect_y, rect_y2, rect_h) = match first_data.direction {
+        DirUD::Down => (first_bop_y, first_tip_y, first_tip_y - first_bop_y),
+        DirUD::Up => (first_tip_y, first_bop_y, first_bop_y - first_tip_y),
     };
 
-    adjustment_x + head_x
+    graphic_items.push(Line(first_coords.0, rect_y, first_coords.0, rect_y2, Strokestyle(STEM_WIDTH, Black)));
+
+    graphic_items
 }
 
-fn do_beams(items: &Vec<(RItemBeamData, NPoint)>) -> GraphicItems {
+fn do_beam(items: &Vec<(RItemBeamData, NPoint)>) -> GraphicItems {
     let mut graphic_items = GraphicItems::new();
 
     match items.len() {
@@ -411,14 +311,14 @@ fn do_beams(items: &Vec<(RItemBeamData, NPoint)>) -> GraphicItems {
             let first_tip_y = first_coords.1 + (first_data.tip_level * SPACE_HALF) + (STEM_LENGTH * SPACE_HALF) * direction_sign;
             let first_bop_y = first_coords.1
                 + match first_data.direction {
-                    DirUD::Down => first_data.bottom_level as f32 * SPACE_HALF,
-                    DirUD::Up => first_data.top_level as f32 * SPACE_HALF,
+                    DirUD::Down => first_data.bottom_level as f32 * SPACE_HALF + STEM_HEAD_CORRECTION,
+                    DirUD::Up => first_data.top_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
                 };
             let (rect_y, rect_y2, rect_h) = match first_data.direction {
                 DirUD::Down => (first_bop_y, first_tip_y, first_tip_y - first_bop_y),
                 DirUD::Up => (first_tip_y, first_bop_y, first_bop_y - first_tip_y),
             };
-            graphic_items.push(Line(first_coords.0, rect_y, first_coords.0, rect_y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
+            graphic_items.push(Line(first_coords.0, rect_y, first_coords.0, rect_y2, Strokestyle(STEM_WIDTH, Black)));
 
             // last
             let last_data = &items[last_idx].0;
@@ -426,15 +326,15 @@ fn do_beams(items: &Vec<(RItemBeamData, NPoint)>) -> GraphicItems {
             let last_tip_y = last_coords.1 + (last_data.tip_level * SPACE_HALF) + (STEM_LENGTH * SPACE_HALF) * direction_sign;
             let last_bop_y = last_coords.1
                 + match last_data.direction {
-                    DirUD::Down => last_data.bottom_level as f32 * SPACE_HALF,
-                    DirUD::Up => last_data.top_level as f32 * SPACE_HALF,
+                    DirUD::Down => last_data.bottom_level as f32 * SPACE_HALF + STEM_HEAD_CORRECTION,
+                    DirUD::Up => last_data.top_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
                 };
             let (rect_y, rect_y2, rect_h) = match last_data.direction {
                 DirUD::Down => (last_bop_y, last_tip_y, last_tip_y - last_bop_y),
                 DirUD::Up => (last_tip_y, last_bop_y, last_bop_y - last_tip_y),
             };
 
-            graphic_items.push(Line(last_coords.0, rect_y, last_coords.0, rect_y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
+            graphic_items.push(Line(last_coords.0, rect_y, last_coords.0, rect_y2, Strokestyle(STEM_WIDTH, Black)));
 
             //================================================================
             let beam_width = last_coords.0 - first_coords.0;
@@ -447,16 +347,22 @@ fn do_beams(items: &Vec<(RItemBeamData, NPoint)>) -> GraphicItems {
                 for middle_item in middle_items {
                     let middle_data = &middle_item.0;
                     let middle_coords = (middle_item.1 .0 + get_head_x_adjustment(last_data), middle_item.1 .1);
-                    let nrect = NRectExt::new(NRect::new(-5., -5., 10., 10.), NRectType::DevStem("orange".to_string()));
-                    graphic_items.push(next2graphic(&nrect, middle_coords.0, middle_coords.1).unwrap());
+
+                    // let nrect = NRectExt::new(NRect::new(-5., -5., 10., 10.), NRectType::DevStem("orange".to_string()));
+                    // graphic_items.push(next2graphic(&nrect, middle_coords.0, middle_coords.1).unwrap());
 
                     let fraction = (middle_coords.0 - first_coords.0) / beam_width;
+                    let middle_tip_y = first_tip_y + (beam_height * fraction);
 
-                    let middle_tip_y = middle_coords.1 + first_tip_y + (beam_height * fraction);
+                    let middle_coords = (middle_item.1 .0 + get_head_x_adjustment(last_data), middle_item.1 .1);
+
+                    // let nrect = NRectExt::new(NRect::new(-5., -5., 10., 10.), NRectType::DevStem("purple".to_string()));
+                    // graphic_items.push(next2graphic(&nrect, middle_coords.0, middle_tip_y).unwrap());
+
                     let middle_bop_y = middle_coords.1
                         + match middle_data.direction {
-                            DirUD::Down => middle_data.bottom_level as f32 * SPACE_HALF,
-                            DirUD::Up => middle_data.top_level as f32 * SPACE_HALF,
+                            DirUD::Down => middle_data.bottom_level as f32 * SPACE_HALF + STEM_HEAD_CORRECTION,
+                            DirUD::Up => middle_data.top_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
                         };
 
                     let (rect_y, rect_y2, rect_h) = match middle_data.direction {
@@ -464,7 +370,7 @@ fn do_beams(items: &Vec<(RItemBeamData, NPoint)>) -> GraphicItems {
                         DirUD::Up => (middle_tip_y, middle_bop_y, middle_bop_y - middle_tip_y),
                     };
 
-                    graphic_items.push(Line(middle_coords.0, rect_y, middle_coords.0, rect_y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
+                    graphic_items.push(Line(middle_coords.0, rect_y, middle_coords.0, rect_y2, Strokestyle(STEM_WIDTH, Black)));
                     tip_coords.push((middle_coords.0, middle_tip_y, fraction));
                 }
             }
@@ -481,24 +387,14 @@ fn do_sub_beams(beam_width: f32, beam_height: f32, tip_coords: &Vec<(f32, f32, f
     let mut graphic_items = GraphicItems::new();
     let lastidx = tip_coords.len() - 1;
     let beamtypes: Vec<BeamType> = durations.iter().map(|d| duration_to_beamtype(d)).collect::<Vec<BeamType>>();
-    dbg!(&beamtypes);
 
     let sixteenths = tip_coords.iter().map(|(x, y, _)| (*x, *y + BEAM_SUB_DISTANCE * -direction.sign())).collect::<Vec<(f32, f32)>>();
     let sixteenths_y = tip_coords.iter().map(|(_, y, _)| *y + BEAM_SUB_DISTANCE * -direction.sign()).collect::<Vec<f32>>();
-
-    dbg!(&sixteenths);
-    dbg!(&sixteenths_y);
-
     let thirtytwos = tip_coords.iter().map(|(x, y, _)| (*x, *y + BEAM_SUB_DISTANCE * 2.0 * -direction.sign())).collect::<Vec<(f32, f32)>>();
     let thirtytwos_y = tip_coords.iter().map(|(_, y, _)| *y + BEAM_SUB_DISTANCE * 2.0 * -direction.sign()).collect::<Vec<f32>>();
 
-    graphic_items.push(Line(
-        tip_coords[0].0,
-        tip_coords[0].1,
-        tip_coords[lastidx].0,
-        tip_coords[lastidx].1,
-        Strokestyle(DEV_LINE_THICKNESS, Blue),
-    ));
+    let (x, y, x2, y2) = (tip_coords[0].0 - STEM_WIDTH_HALF, tip_coords[0].1, tip_coords[lastidx].0 + STEM_WIDTH_HALF, tip_coords[lastidx].1);
+    graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Blue)));
 
     use BeamType::*;
     match beamtypes.as_slice() {
@@ -535,13 +431,16 @@ fn do_sub_sixteen_rightside(left: (f32, f32), right: (f32, f32)) -> GraphicItems
     let fraction = (width - HEAD_WIDTH_BLACK) / width;
     let tip_left_x = right.0 - HEAD_WIDTH_BLACK;
     let tip_left_y = left.1 + (fraction * height);
-    graphic_items.push(Line(tip_left_x, tip_left_y, right.0, right.1, Strokestyle(DEV_LINE_THICKNESS, Red)));
+
+    let (x, y, x2, y2) = (tip_left_x - STEM_WIDTH_HALF, tip_left_y, right.0 + STEM_WIDTH_HALF, right.1);
+    graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
     graphic_items
 }
 
 fn do_sub_sixteen(left: (f32, f32), right: (f32, f32)) -> GraphicItems {
     let mut graphic_items = GraphicItems::new();
-    graphic_items.push(Line(left.0, left.1, right.0, right.1, Strokestyle(DEV_LINE_THICKNESS, Red)));
+    let (x, y, x2, y2) = (left.0 - STEM_WIDTH_HALF, left.1, right.0 + STEM_WIDTH_HALF, right.1);
+    graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
     graphic_items
 }
 
@@ -553,6 +452,7 @@ fn do_sub_sixteen_leftside(left: (f32, f32), right: (f32, f32)) -> GraphicItems 
     dbg!(fraction);
     let tip_left_x = left.0 + HEAD_WIDTH_BLACK;
     let tip_left_y = left.1 + (fraction * height);
-    graphic_items.push(Line(left.0, left.1, tip_left_x, tip_left_y, Strokestyle(DEV_LINE_THICKNESS, Red)));
+    let (x, y, x2, y2) = (left.0 - STEM_WIDTH_HALF, left.1, tip_left_x + STEM_WIDTH_HALF, tip_left_y);
+    graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
     graphic_items
 }
