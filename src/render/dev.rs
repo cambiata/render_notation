@@ -4,11 +4,11 @@ use std::cell::Ref;
 
 use crate::render::fonts::ebgaramond::GLYPH_HEIGHT;
 
-pub fn nrect2rect(n: NRect, s: Stroke, f: graphics::item::Fill) -> GraphicItem {
+pub fn nrect2graphic(n: NRect, s: Stroke, f: graphics::item::Fill) -> GraphicItem {
     Rect(n.0, n.1, n.2, n.3, s, f)
 }
 
-pub fn next2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<GraphicItem> {
+pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<GraphicItem> {
     let r = n.0.move_rect(move_x, move_y);
     match &n.1 {
         NRectType::Head(head_type, head_shape) => {
@@ -192,12 +192,12 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
 
                     if col.duration == 0 || DRAW_FRAMES {
                         let frame_nrect = NRectExt::new(frame_rect, NRectType::Dev(false, color.to_string()));
-                        let frame_item = next2graphic(&frame_nrect, coords.0, coords.1).unwrap();
+                        let frame_item = nrectext2graphic(&frame_nrect, coords.0, coords.1).unwrap();
                         graphic_items.push(frame_item);
                     }
 
                     // glyph rect
-                    if let Some(graphic_item) = next2graphic(&nrect, coords.0, coords.1) {
+                    if let Some(graphic_item) = nrectext2graphic(&nrect, coords.0, coords.1) {
                         graphic_items.push(graphic_item);
                     }
                     // let graphic_item = next2graphic(&nrect, coords.0, coords.1).unwrap();
@@ -207,7 +207,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                 let x = col.x;
                 let rect = NRect::new(0., 0., 10.0, 10.0);
                 let nrect = NRectExt::new(rect, NRectType::Dev(true, "gray".to_string()));
-                let graphic_item = next2graphic(&nrect, x, y).unwrap();
+                let graphic_item = nrectext2graphic(&nrect, x, y).unwrap();
                 graphic_items.push(graphic_item);
             }
             rowidx += 1;
