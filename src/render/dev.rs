@@ -104,7 +104,16 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
             Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(color)))
         }
 
-        NRectType::Tie(tie) => None, // Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Black)),
+        NRectType::Tie(tie) => match tie {
+            Tie::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(LightGray))),
+            Tie::Standard => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Green))),
+            Tie::UnresolvedInChunk => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Red))),
+        },
+
+        NRectType::TieTo(tie_to) => match tie_to {
+            TieTo::ResolveTieFrom => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Lime))),
+            TieTo::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Gray))),
+        },
 
         NRectType::LyricChar(c) => {
             //
