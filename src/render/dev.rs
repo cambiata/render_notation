@@ -153,9 +153,7 @@ pub fn five_lines(w: f32) -> GraphicItems {
     items
 }
 
-pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
-    const DRAW_FRAMES: bool = false;
-
+pub fn matrix_to_svg(matrix: &RMatrix, draw_dev_frames: bool) -> String {
     let mut graphic_items = GraphicItems::new();
 
     if let Some(bartemplate) = &matrix.bartemplate {
@@ -190,7 +188,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
                     let frame_rect = nrect.0.clone();
                     let color = if col.duration == 0 { "orange" } else { "red" };
 
-                    if col.duration == 0 || DRAW_FRAMES {
+                    if col.duration == 0 || draw_dev_frames {
                         let frame_nrect = NRectExt::new(frame_rect, NRectType::Dev(false, color.to_string()));
                         let frame_item = nrectext2graphic(&frame_nrect, coords.0, coords.1).unwrap();
                         graphic_items.push(frame_item);
@@ -274,7 +272,8 @@ pub fn matrix_to_svg(matrix: &RMatrix, svg_filename: &str) {
 
     dbg!(matrix.width, matrix.height);
     let svg = SvgBuilder::new().build(graphic_items).unwrap();
-    std::fs::write(svg_filename, svg).unwrap();
+    // std::fs::write(svg_filename, svg).unwrap();
+    svg
 }
 
 // fn get_head_x_adjustment(data: &RItemBeamData) -> f32 {
