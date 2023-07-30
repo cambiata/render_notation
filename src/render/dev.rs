@@ -104,11 +104,14 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
             Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(color)))
         }
 
-        NRectType::Tie(tie) => match tie {
-            Tie::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(LightGray))),
-            Tie::Standard => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Green))),
-            Tie::UnresolvedInChunk => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Red))),
-        },
+        NRectType::Tie(tie, direction, placement) => {
+            // dbg!(tie, direction, placement);
+            match tie {
+                Tie::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(LightGray))),
+                Tie::Standard => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Green))),
+                Tie::UnresolvedInChunk => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Red))),
+            }
+        }
 
         NRectType::TieTo(tie_to) => match tie_to {
             TieTo::ResolveTieFrom => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Lime))),
@@ -427,7 +430,7 @@ fn do_sub_beams(beam_width: f32, beam_height: f32, tip_coords: &Vec<(f32, f32, f
     let thirtytwos_y = tip_coords.iter().map(|(_, y, _)| *y + BEAM_SUB_DISTANCE * 2.0 * -direction.sign()).collect::<Vec<f32>>();
 
     let (x, y, x2, y2) = (tip_coords[0].0 - STEM_WIDTH_HALF, tip_coords[0].1, tip_coords[lastidx].0 + STEM_WIDTH_HALF, tip_coords[lastidx].1);
-    graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Blue)));
+    // graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Blue)));
 
     let beamheight = match direction {
         DirUD::Down => -BEAM_HEIGHT,
@@ -445,7 +448,7 @@ fn do_sub_beams(beam_width: f32, beam_height: f32, tip_coords: &Vec<(f32, f32, f
         [B16, B16] | [B16, B16, B16] | [B16, B16, B16, B16] => {
             let (x, y, x2, y2) = (sixteenths[0].0, sixteenths[0].1, sixteenths[lastidx].0, sixteenths[lastidx].1);
 
-            graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Blue)));
+            // graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Blue)));
 
             let beamheight = match direction {
                 DirUD::Down => -BEAM_HEIGHT,
