@@ -81,17 +81,10 @@ pub fn do_beam(items: &Vec<(RItemBeamData, NPoint)>) -> GraphicItems {
                     let middle_data = &middle_item.0;
                     let middle_coords = (middle_item.1 .0 + get_head_x_adjustment(last_data), middle_item.1 .1);
 
-                    // let nrect = NRectExt::new(NRect::new(-5., -5., 10., 10.), NRectType::DevStem("orange".to_string()));
-                    // graphic_items.push(next2graphic(&nrect, middle_coords.0, middle_coords.1).unwrap());
-
                     let fraction = (middle_coords.0 - first_coords.0) / beam_width;
                     let middle_tip_y = first_tip_y + (beam_height * fraction);
 
                     let middle_coords = (middle_item.1 .0 + get_head_x_adjustment(last_data), middle_item.1 .1);
-
-                    // let nrect = NRectExt::new(NRect::new(-5., -5., 10., 10.), NRectType::DevStem("purple".to_string()));
-                    // graphic_items.push(next2graphic(&nrect, middle_coords.0, middle_tip_y).unwrap());
-
                     let middle_bop_y = middle_coords.1
                         + match middle_data.direction {
                             DirUD::Up => middle_data.bottom_level as f32 * SPACE_HALF - STEM_HEAD_CORRECTION,
@@ -145,7 +138,6 @@ pub fn do_sub_beams(beam_width: f32, beam_height: f32, tip_coords: &Vec<(f32, f3
     match beamtypes.as_slice() {
         [B16, B16] | [B16, B16, B16] | [B16, B16, B16, B16] => {
             let (x, y, x2, y2) = (sixteenths[0].0, sixteenths[0].1, sixteenths[lastidx].0, sixteenths[lastidx].1);
-
             // graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Blue)));
 
             let beamheight = match direction {
@@ -186,7 +178,7 @@ pub fn do_sub_sixteen_rightside(left: (f32, f32), right: (f32, f32), direction: 
     let tip_left_y = left.1 + (fraction * height);
 
     let (x, y, x2, y2) = (tip_left_x - STEM_WIDTH_HALF, tip_left_y, right.0 + STEM_WIDTH_HALF, right.1);
-    graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
+    // graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
 
     let beamheight = match direction {
         DirUD::Down => -BEAM_HEIGHT,
@@ -206,7 +198,7 @@ pub fn do_sub_sixteen_rightside(left: (f32, f32), right: (f32, f32), direction: 
 pub fn do_sub_sixteen(left: (f32, f32), right: (f32, f32), direction: DirUD) -> GraphicItems {
     let mut graphic_items = GraphicItems::new();
     let (x, y, x2, y2) = (left.0 - STEM_WIDTH_HALF, left.1, right.0 + STEM_WIDTH_HALF, right.1);
-    graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
+    // graphic_items.push(Line(x, y, x2, y2, Strokestyle(DEV_LINE_THICKNESS, Red)));
 
     let beamheight = match direction {
         DirUD::Down => -BEAM_HEIGHT,
