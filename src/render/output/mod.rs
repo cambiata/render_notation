@@ -325,8 +325,6 @@ fn output_ties(matrix: &RMatrix) -> GraphicItems {
                                     let mut from_y2 = from_y;
                                     let mut to_x2 = to_x - SPACE.min(max_seglength);
                                     let mut to_y2 = to_y;
-
-                                    dbg!(length, TIE_HEIGHT, length / TIE_HEIGHT);
                                     let tie_height = TIE_HEIGHT.min(length / 60.0 * TIE_HEIGHT);
 
                                     // tie height
