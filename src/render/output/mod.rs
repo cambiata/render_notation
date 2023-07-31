@@ -3,6 +3,7 @@ use crate::render::fonts::ebgaramond::GLYPH_HEIGHT;
 use graphics::prelude::*;
 use notation_rs::prelude::*;
 use std::cell::Ref;
+use std::collections::BTreeMap;
 
 pub mod elements;
 
@@ -106,18 +107,15 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
             Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(color)))
         }
 
-        NRectType::Tie(tie, direction, placement) => {
-            // dbg!(tie, direction, placement);
-            match tie {
-                Tie::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(LightGray))),
-                Tie::Standard => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Green))),
-                Tie::UnresolvedInChunk => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Red))),
-            }
-        }
+        NRectType::TieFrom(_, _, ttype, _, _, _, _) => match ttype {
+            TieFromType::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(LightGray))),
+            TieFromType::Standard => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Green))),
+            TieFromType::UnresolvedInChunk => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Red))),
+        },
 
-        NRectType::TieTo(tie_to) => match tie_to {
-            TieTo::ResolveTieFrom => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Lime))),
-            TieTo::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Gray))),
+        NRectType::TieTo(ttype) => match ttype {
+            TieToType::ResolveTieFrom(_, _) => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Lime))),
+            TieToType::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Gray))),
         },
 
         NRectType::LyricChar(c) => {
@@ -186,12 +184,134 @@ fn output_ties(matrix: &RMatrix) -> GraphicItems {
     for row in matrix.rows.iter() {
         let row = row.borrow();
 
+        let mut map_rect: BTreeMap<(usize, i8), Rc<RefCell<NRectExt>>> = BTreeMap::new();
+        let mut map_ritem: BTreeMap<(usize, i8), Rc<RefCell<RItem>>> = BTreeMap::new();
+
         for item in &row.items {
             if let Some(item) = item {
-                let item: Ref<RItem> = item.borrow();
-                if let Some(nrects) = &item.nrects {
-                    let ties_to = nrects.iter().filter(|nrect| nrect.borrow().is_tie_from()).collect::<Vec<_>>();
+                let item_: Ref<RItem> = item.borrow();
+
+                // Store ties_from in map...
+                if let Some(nrects) = &item_.nrects {
+                    let ties_from = nrects.iter().filter(|nrect| nrect.borrow().is_tie_from()).collect::<Vec<_>>();
+                    for tie_from in ties_from {
+                        let tie: Ref<NRectExt> = tie_from.borrow();
+                        match &tie.1 {
+                            NRectType::TieFrom(note_id, level, ttype, _, _, _, _) => match ttype {
+                                TieFromType::Standard => {
+                                    map_rect.insert((*note_id, *level), tie_from.clone());
+                                    map_ritem.insert((*note_id, *level), item.clone());
+                                }
+                                TieFromType::LetRing => todo!(),
+                                TieFromType::UnresolvedInChunk => todo!(),
+                            },
+                            _ => {}
+                        }
+                    }
+
+                    let ties_to = nrects.iter().filter(|nrect| nrect.borrow().is_tie_to()).collect::<Vec<_>>();
                     dbg!(&ties_to);
+
+                    for tie_to in ties_to {
+                        let tie: Ref<NRectExt> = tie_to.borrow();
+                        match &tie.1 {
+                            NRectType::TieTo(ttype) => match ttype {
+                                TieToType::ResolveTieFrom(from_note_id, level) => {
+                                    let key: (usize, i8) = (*from_note_id, *level);
+
+                                    let from_rect: Ref<NRectExt> = map_rect.get(&key).unwrap().borrow();
+                                    let from_ritem: Ref<RItem> = map_ritem.get(&key).unwrap().borrow();
+
+                                    let (from_type, from_duration, from_note_direction, from_tie_direction, from_placement) = match &from_rect.1 {
+                                        NRectType::TieFrom(note_id, level, ttype, from_duration, from_note_direction, from_tie_direction, placement) => {
+                                            (ttype, from_duration, from_note_direction, from_tie_direction, placement)
+                                        }
+                                        _ => todo!(),
+                                    };
+                                    dbg!(from_rect.0);
+                                    dbg!(from_ritem.coords.unwrap());
+                                    dbg!(from_note_direction, from_tie_direction, from_placement);
+
+                                    let from_item_coords = from_ritem.coords.unwrap();
+                                    let mut from_x = from_item_coords.0 + from_rect.0 .0;
+                                    let mut from_y = from_item_coords.1 + from_rect.0 .1;
+                                    let to_item_coords = item_.coords.unwrap();
+                                    let mut to_x = to_item_coords.0 + tie.0 .0 + tie.0 .2;
+                                    let mut to_y = to_item_coords.1 + tie.0 .1;
+
+                                    // vertical placement
+                                    match from_placement {
+                                        TiePlacement::Top => {}
+                                        TiePlacement::Mid => {
+                                            from_y = from_y + SPACE_HALF;
+                                            to_y = to_y + SPACE_HALF;
+                                        }
+                                        TiePlacement::Bottom => {
+                                            from_y = from_y + SPACE;
+                                            to_y = to_y + SPACE;
+                                        }
+                                    }
+
+                                    // horizontal placement
+                                    match from_note_direction {
+                                        DirUD::Up => match from_placement {
+                                            TiePlacement::Top => {
+                                                // if duration_has_stem(from_duration) {
+                                                from_x += SPACE_HALF;
+                                                // }
+                                            }
+                                            TiePlacement::Mid => {
+                                                from_x += SPACE_HALF;
+                                                to_x -= SPACE_HALF;
+                                            }
+                                            TiePlacement::Bottom => {}
+                                        },
+                                        DirUD::Down => match from_placement {
+                                            TiePlacement::Top => {}
+                                            TiePlacement::Mid => {
+                                                to_x -= SPACE_HALF;
+                                                from_x += SPACE_HALF;
+                                            }
+                                            TiePlacement::Bottom => {
+                                                to_x -= SPACE_HALF;
+                                            }
+                                        },
+                                    }
+
+                                    let rect = NRect::new(-5., -5., 10., 10.);
+                                    graphic_items.push(nrectext2graphic(&NRectExt::new(rect, NRectType::Dev(true, "green".to_string())), from_x, from_y).unwrap());
+
+                                    let rect = NRect::new(-5., -5., 10., 10.);
+                                    graphic_items.push(nrectext2graphic(&NRectExt::new(rect, NRectType::Dev(true, "lime".to_string())), to_x, to_y).unwrap());
+
+                                    let length = to_x - from_x;
+                                    let max_seglength = length / 3.0;
+                                    let mut from_x2 = from_x + SPACE.min(max_seglength);
+                                    let mut from_y2 = from_y;
+                                    let mut to_x2 = to_x - SPACE.min(max_seglength);
+                                    let mut to_y2 = to_y;
+
+                                    match from_tie_direction {
+                                        DirUD::Down => {
+                                            from_y2 = from_y2 + SPACE_HALF;
+                                            to_y2 = to_y2 + SPACE_HALF;
+                                        }
+                                        DirUD::Up => {
+                                            from_y2 = from_y2 - SPACE_HALF;
+                                            to_y2 = to_y2 - SPACE_HALF;
+                                        }
+                                    }
+
+                                    let rect = NRect::new(-5., -5., 10., 10.);
+                                    graphic_items.push(nrectext2graphic(&NRectExt::new(rect, NRectType::Dev(true, "green".to_string())), from_x2, from_y2).unwrap());
+                                    let rect = NRect::new(-5., -5., 10., 10.);
+                                    graphic_items.push(nrectext2graphic(&NRectExt::new(rect, NRectType::Dev(true, "lime".to_string())), to_x2, to_y2).unwrap());
+                                }
+                                TieToType::LetRing => todo!(),
+                            },
+                            _ => {}
+                        }
+                    }
                 }
             }
         }
@@ -245,7 +365,9 @@ fn output_beamgroups(matrix: &RMatrix) -> GraphicItems {
                 //------------------------------------------------------------------
                 match &item.note_beam {
                     RItemBeam::Single(ref data) => {
-                        graphic_items.extend(do_single(data, item.coords.unwrap()));
+                        if duration_has_stem(&data.duration) {
+                            graphic_items.extend(do_single(data, item.coords.unwrap()));
+                        }
                     }
                     RItemBeam::Start(data) => {
                         notedata = vec![];
@@ -262,7 +384,9 @@ fn output_beamgroups(matrix: &RMatrix) -> GraphicItems {
                 }
                 match &item.note2_beam {
                     RItemBeam::Single(data) => {
-                        graphic_items.extend(do_single(data, item.coords.unwrap()));
+                        if duration_has_stem(&data.duration) {
+                            graphic_items.extend(do_single(data, item.coords.unwrap()));
+                        }
                     }
                     RItemBeam::Start(data) => {
                         note2data = vec![];
