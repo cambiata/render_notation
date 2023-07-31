@@ -17,12 +17,13 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
         NRectType::Head(head_type, head_shape) => {
             //
             let p = match head_shape {
-                HeadShape::BlackHead => CADENZA_148.to_vec(),
-                HeadShape::WhiteHead => CADENZA_153.to_vec(),
-                HeadShape::WholeHead => CADENZA_83.to_vec(),
+                HeadShape::BlackHead => CADENZA_HEAD_BLACK.to_vec(),
+                HeadShape::WhiteHead => CADENZA_HEAD_WHITE.to_vec(),
+                HeadShape::WholeHead => CADENZA_HEAD_WHOLE.to_vec(),
             };
             Some(Path(PathSegments(p).inv01().move_path(r.0, SPACE_HALF + r.1), NoStroke, Fillstyle(Black), PathCacheInfo::NoCache))
         }
+
         NRectType::Dotted(dots_nr) => {
             let p = CADENZA_DOT.to_vec();
             Some(Path(
@@ -36,12 +37,12 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
         NRectType::Pause(pause_type) => {
             //
             let p = match pause_type {
-                PauseShape::Whole => CADENZA_122.to_vec(),
-                PauseShape::Half => CADENZA_172.to_vec(),
-                PauseShape::Quarter => CADENZA_147.to_vec(),
-                PauseShape::Eighth => CADENZA_165.to_vec(),
-                PauseShape::Sixteenth => CADENZA_176.to_vec(),
-                PauseShape::ThirtySecond => CADENZA_3.to_vec(),
+                PauseShape::Whole => CADENZA_PAUSE_WHOLE.to_vec(),
+                PauseShape::Half => CADENZA_PAUSE_HALF.to_vec(),
+                PauseShape::Quarter => CADENZA_PAUSE_QUARTER.to_vec(),
+                PauseShape::Eighth => CADENZA_PAUSE_EIGHTH.to_vec(),
+                PauseShape::Sixteenth => CADENZA_PAUSE_SIXTEENTH.to_vec(),
+                PauseShape::ThirtySecond => CADENZA_PAUSE_THIRTYSECOND.to_vec(),
             };
             let y: f32 = match pause_type {
                 PauseShape::Whole => SPACE_HALF,
@@ -58,13 +59,13 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
             match direction {
                 DirUD::Up => match beamtype {
                     BeamType::B8 => Some(Path(
-                        PathSegments(CADENZA_44.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1),
+                        PathSegments(CADENZA_FLAG_EIGTH_UP.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1),
                         NoStroke,
                         Fillstyle(Black),
                         PathCacheInfo::NoCache,
                     )),
                     BeamType::B16 => Some(Path(
-                        PathSegments(CADENZA_139.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1),
+                        PathSegments(CADENZA_FLAG_SIXTEENTH_UP.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1),
                         NoStroke,
                         Fillstyle(Black),
                         PathCacheInfo::NoCache,
@@ -75,13 +76,13 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
                 },
                 DirUD::Down => match beamtype {
                     BeamType::B8 => Some(Path(
-                        PathSegments(CADENZA_43.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1 + SPACE * 3.0),
+                        PathSegments(CADENZA_FLAG_EIGHT_DOWN.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1 + SPACE * 3.0),
                         NoStroke,
                         Fillstyle(Black),
                         PathCacheInfo::NoCache,
                     )),
                     BeamType::B16 => Some(Path(
-                        PathSegments(CADENZA_142.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1 + SPACE * 3.0),
+                        PathSegments(CADENZA_FLAG_SIXTEENTH_DOWN.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1 + SPACE * 3.0),
                         NoStroke,
                         Fillstyle(Black),
                         PathCacheInfo::NoCache,
@@ -93,19 +94,19 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
 
         NRectType::Clef(clef) => match clef {
             Clef::G => Some(Path(
-                PathSegments(CADENZA_8.to_vec()).inv01().move_path(r.0, r.1 + 4.6 * SPACE),
+                PathSegments(CADENZA_CLEF_G.to_vec()).inv01().move_path(r.0, r.1 + 4.6 * SPACE),
                 NoStroke,
                 Fillstyle(Black),
                 PathCacheInfo::NoCache,
             )),
             Clef::F => Some(Path(
-                PathSegments(CADENZA_33.to_vec()).inv01().move_path(r.0, r.1 + SPACE),
+                PathSegments(CADENZA_CLEF_F.to_vec()).inv01().move_path(r.0, r.1 + SPACE),
                 NoStroke,
                 Fillstyle(Black),
                 PathCacheInfo::NoCache,
             )),
             Clef::C => Some(Path(
-                PathSegments(CADENZA_36.to_vec()).inv01().move_path(r.0, r.1 + 2.0 * SPACE),
+                PathSegments(CADENZA_CLEF_C.to_vec()).inv01().move_path(r.0, r.1 + 2.0 * SPACE),
                 NoStroke,
                 Fillstyle(Black),
                 PathCacheInfo::NoCache,
