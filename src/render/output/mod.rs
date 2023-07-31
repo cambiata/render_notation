@@ -21,11 +21,16 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
                 HeadShape::WhiteHead => CADENZA_153.to_vec(),
                 HeadShape::WholeHead => CADENZA_83.to_vec(),
             };
-            Some(Path(PathSegments(p).inv01().move_path(r.0, SPACE_HALF + r.1), NoStroke, Fillstyle(Black)))
+            Some(Path(PathSegments(p).inv01().move_path(r.0, SPACE_HALF + r.1), NoStroke, Fillstyle(Black), PathCacheInfo::NoCache))
         }
         NRectType::Dotted(dots_nr) => {
             let p = CADENZA_DOT.to_vec();
-            Some(Path(PathSegments(p).inv01().move_path(r.0 + SPACE_QUARTER, r.1 + SPACE_QUARTER), NoStroke, Fillstyle(Black)))
+            Some(Path(
+                PathSegments(p).inv01().move_path(r.0 + SPACE_QUARTER, r.1 + SPACE_QUARTER),
+                NoStroke,
+                Fillstyle(Black),
+                PathCacheInfo::NoCache,
+            ))
         }
 
         NRectType::Pause(pause_type) => {
@@ -46,14 +51,24 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
                 PauseShape::Sixteenth => SPACE,
                 PauseShape::ThirtySecond => 0.,
             };
-            Some(Path(PathSegments(p).inv01().move_path(r.0, r.1 + y), NoStroke, Fillstyle(Black)))
+            Some(Path(PathSegments(p).inv01().move_path(r.0, r.1 + y), NoStroke, Fillstyle(Black), PathCacheInfo::NoCache))
         }
 
         NRectType::Flag(beamtype, direction) => {
             match direction {
                 DirUD::Up => match beamtype {
-                    BeamType::B8 => Some(Path(PathSegments(CADENZA_44.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1), NoStroke, Fillstyle(Black))),
-                    BeamType::B16 => Some(Path(PathSegments(CADENZA_139.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1), NoStroke, Fillstyle(Black))), // 139, 141
+                    BeamType::B8 => Some(Path(
+                        PathSegments(CADENZA_44.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1),
+                        NoStroke,
+                        Fillstyle(Black),
+                        PathCacheInfo::NoCache,
+                    )),
+                    BeamType::B16 => Some(Path(
+                        PathSegments(CADENZA_139.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1),
+                        NoStroke,
+                        Fillstyle(Black),
+                        PathCacheInfo::NoCache,
+                    )), // 139, 141
                     _ => None,
                     // B32 => 32,
                     // B64 => 34,
@@ -63,11 +78,13 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
                         PathSegments(CADENZA_43.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1 + SPACE * 3.0),
                         NoStroke,
                         Fillstyle(Black),
+                        PathCacheInfo::NoCache,
                     )),
                     BeamType::B16 => Some(Path(
                         PathSegments(CADENZA_142.to_vec()).inv01().move_path(r.0 - FLAG_X_ADJUST, r.1 + SPACE * 3.0),
                         NoStroke,
                         Fillstyle(Black),
+                        PathCacheInfo::NoCache,
                     )), // 139, 141
                     _ => None,
                 },
@@ -75,9 +92,24 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
         }
 
         NRectType::Clef(clef) => match clef {
-            Clef::G => Some(Path(PathSegments(CADENZA_8.to_vec()).inv01().move_path(r.0, r.1 + 4.6 * SPACE), NoStroke, Fillstyle(Black))),
-            Clef::F => Some(Path(PathSegments(CADENZA_33.to_vec()).inv01().move_path(r.0, r.1 + SPACE), NoStroke, Fillstyle(Black))),
-            Clef::C => Some(Path(PathSegments(CADENZA_36.to_vec()).inv01().move_path(r.0, r.1 + 2.0 * SPACE), NoStroke, Fillstyle(Black))),
+            Clef::G => Some(Path(
+                PathSegments(CADENZA_8.to_vec()).inv01().move_path(r.0, r.1 + 4.6 * SPACE),
+                NoStroke,
+                Fillstyle(Black),
+                PathCacheInfo::NoCache,
+            )),
+            Clef::F => Some(Path(
+                PathSegments(CADENZA_33.to_vec()).inv01().move_path(r.0, r.1 + SPACE),
+                NoStroke,
+                Fillstyle(Black),
+                PathCacheInfo::NoCache,
+            )),
+            Clef::C => Some(Path(
+                PathSegments(CADENZA_36.to_vec()).inv01().move_path(r.0, r.1 + 2.0 * SPACE),
+                NoStroke,
+                Fillstyle(Black),
+                PathCacheInfo::NoCache,
+            )),
         },
         NRectType::Accidental(accidental) => {
             let p = match accidental {
@@ -93,7 +125,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
                 _ => SPACE * 1.5,
             };
             //
-            Some(Path(PathSegments(p).inv01().move_path(r.0, r.1 + y), NoStroke, Fillstyle(Black)))
+            Some(Path(PathSegments(p).inv01().move_path(r.0, r.1 + y), NoStroke, Fillstyle(Black), PathCacheInfo::NoCache))
         }
 
         NRectType::WIP(msg) => {
@@ -129,6 +161,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
                         .move_path(rect.0, rect.1 + GLYPH_HEIGHT * FONT_SCALE_LYRICS),
                     NoStroke,
                     Fillstyle(Black),
+                    PathCacheInfo::NoCache,
                 ))
             }
 
@@ -212,7 +245,6 @@ fn output_ties(matrix: &RMatrix) -> GraphicItems {
                     }
 
                     let ties_to = nrects.iter().filter(|nrect| nrect.borrow().is_tie_to()).collect::<Vec<_>>();
-                    dbg!(&ties_to);
 
                     for tie_to in ties_to {
                         let tie: Ref<NRectExt> = tie_to.borrow();
@@ -330,7 +362,7 @@ fn output_ties(matrix: &RMatrix) -> GraphicItems {
                                     );
                                     segments.extend(points.iter().skip(1).map(|p| PathSegment::L(p.0, p.1)).collect::<Vec<_>>());
                                     segments.push(PathSegment::Z);
-                                    graphic_items.push(Path(PathSegments(segments), Strokestyle(2.0, Black), Fillstyle(Black)));
+                                    graphic_items.push(Path(PathSegments(segments), Strokestyle(2.0, Black), Fillstyle(Black), PathCacheInfo::NoCache));
                                 }
                                 TieToType::LetRing => todo!(),
                             },
