@@ -108,13 +108,15 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
         }
 
         NRectType::TieFrom(_, _, ttype, _, _, _, _) => match ttype {
+            // TieFromType::Standard => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Green))),
+            TieFromType::Standard => None,
             TieFromType::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(LightGray))),
-            TieFromType::Standard => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Green))),
             TieFromType::UnresolvedInChunk => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Red))),
         },
 
         NRectType::TieTo(ttype) => match ttype {
-            TieToType::ResolveTieFrom(_, _) => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Lime))),
+            // TieToType::ResolveTieFrom(_, _) => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Lime))),
+            TieToType::ResolveTieFrom(_, _) => None,
             TieToType::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Gray))),
         },
 
@@ -155,16 +157,6 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
     }
 }
 
-// pub fn five_lines(w: f32) -> GraphicItems {
-//     let mut items = GraphicItems::new();
-//     for i in 0..5 {
-//         let y = (i - 2) as f32 * SPACE;
-//         let line = Line(0., y, w, y, Strokestyle(NOTELINES_WIDTH, Orange));
-//         items.push(line);
-//     }
-//     items
-// }
-
 pub fn matrix_to_svg(matrix: &RMatrix, draw_dev_frames: bool) -> String {
     let mut graphic_items = GraphicItems::new();
 
@@ -179,6 +171,8 @@ pub fn matrix_to_svg(matrix: &RMatrix, draw_dev_frames: bool) -> String {
 }
 
 fn output_ties(matrix: &RMatrix) -> GraphicItems {
+    // drawing of ties
+
     let mut graphic_items = GraphicItems::new();
 
     for row in matrix.rows.iter() {
@@ -187,6 +181,7 @@ fn output_ties(matrix: &RMatrix) -> GraphicItems {
         let mut map_rect: BTreeMap<(usize, i8), Rc<RefCell<NRectExt>>> = BTreeMap::new();
         let mut map_ritem: BTreeMap<(usize, i8), Rc<RefCell<RItem>>> = BTreeMap::new();
 
+        let mut itemidx = 0;
         for item in &row.items {
             if let Some(item) = item {
                 let item_: Ref<RItem> = item.borrow();
@@ -202,8 +197,15 @@ fn output_ties(matrix: &RMatrix) -> GraphicItems {
                                     map_rect.insert((*note_id, *level), tie_from.clone());
                                     map_ritem.insert((*note_id, *level), item.clone());
                                 }
-                                TieFromType::LetRing => todo!(),
-                                TieFromType::UnresolvedInChunk => todo!(),
+                                TieFromType::LetRing => {
+                                    println!("LetRing {}", itemidx);
+                                }
+                                TieFromType::UnresolvedInChunk => {
+                                    //
+                                    println!("UnresolvedInChunk {}", itemidx);
+                                    let next_item = &row.items[itemidx + 1];
+                                    dbg!(next_item);
+                                }
                             },
                             _ => {}
                         }
@@ -228,9 +230,10 @@ fn output_ties(matrix: &RMatrix) -> GraphicItems {
                                         }
                                         _ => todo!(),
                                     };
-                                    dbg!(from_rect.0);
-                                    dbg!(from_ritem.coords.unwrap());
-                                    dbg!(from_note_direction, from_tie_direction, from_placement);
+
+                                    // dbg!(from_rect.0);
+                                    // dbg!(from_ritem.coords.unwrap());
+                                    // dbg!(from_note_direction, from_tie_direction, from_placement);
 
                                     let from_item_coords = from_ritem.coords.unwrap();
                                     let mut from_x = from_item_coords.0 + from_rect.0 .0;
@@ -243,12 +246,12 @@ fn output_ties(matrix: &RMatrix) -> GraphicItems {
                                     match from_placement {
                                         TiePlacement::Top => {}
                                         TiePlacement::Mid => {
-                                            from_y = from_y + SPACE_HALF;
-                                            to_y = to_y + SPACE_HALF;
+                                            from_y = from_y + TIE_SPACE;
+                                            to_y = to_y + TIE_SPACE;
                                         }
                                         TiePlacement::Bottom => {
-                                            from_y = from_y + SPACE;
-                                            to_y = to_y + SPACE;
+                                            from_y = from_y + TIE_SPACE;
+                                            to_y = to_y + TIE_SPACE;
                                         }
                                     }
 
@@ -256,33 +259,32 @@ fn output_ties(matrix: &RMatrix) -> GraphicItems {
                                     match from_note_direction {
                                         DirUD::Up => match from_placement {
                                             TiePlacement::Top => {
-                                                // if duration_has_stem(from_duration) {
-                                                from_x += SPACE_HALF;
-                                                // }
+                                                from_x += TIE_FROM_WIDTH;
                                             }
                                             TiePlacement::Mid => {
-                                                from_x += SPACE_HALF;
-                                                to_x -= SPACE_HALF;
-                                            }
-                                            TiePlacement::Bottom => {}
-                                        },
-                                        DirUD::Down => match from_placement {
-                                            TiePlacement::Top => {}
-                                            TiePlacement::Mid => {
-                                                to_x -= SPACE_HALF;
-                                                from_x += SPACE_HALF;
+                                                from_x += TIE_FROM_WIDTH;
+                                                to_x -= TIE_TO_WIDTH;
                                             }
                                             TiePlacement::Bottom => {
-                                                to_x -= SPACE_HALF;
+                                                from_x -= TIE_ADJUST_X;
+                                                to_x += TIE_ADJUST_X;
+                                            }
+                                        },
+
+                                        DirUD::Down => match from_placement {
+                                            TiePlacement::Top => {
+                                                from_x -= TIE_ADJUST_X;
+                                                to_x += TIE_ADJUST_X;
+                                            }
+                                            TiePlacement::Mid => {
+                                                to_x -= TIE_TO_WIDTH;
+                                                from_x += TIE_FROM_WIDTH;
+                                            }
+                                            TiePlacement::Bottom => {
+                                                to_x -= TIE_TO_WIDTH;
                                             }
                                         },
                                     }
-
-                                    let rect = NRect::new(-5., -5., 10., 10.);
-                                    graphic_items.push(nrectext2graphic(&NRectExt::new(rect, NRectType::Dev(true, "green".to_string())), from_x, from_y).unwrap());
-
-                                    let rect = NRect::new(-5., -5., 10., 10.);
-                                    graphic_items.push(nrectext2graphic(&NRectExt::new(rect, NRectType::Dev(true, "lime".to_string())), to_x, to_y).unwrap());
 
                                     let length = to_x - from_x;
                                     let max_seglength = length / 3.0;
@@ -291,21 +293,44 @@ fn output_ties(matrix: &RMatrix) -> GraphicItems {
                                     let mut to_x2 = to_x - SPACE.min(max_seglength);
                                     let mut to_y2 = to_y;
 
+                                    dbg!(length, TIE_HEIGHT, length / TIE_HEIGHT);
+                                    let tie_height = TIE_HEIGHT.min(length / 60.0 * TIE_HEIGHT);
+
+                                    // tie height
                                     match from_tie_direction {
                                         DirUD::Down => {
-                                            from_y2 = from_y2 + SPACE_HALF;
-                                            to_y2 = to_y2 + SPACE_HALF;
+                                            from_y2 = from_y2 + tie_height;
+                                            to_y2 = to_y2 + tie_height;
                                         }
                                         DirUD::Up => {
-                                            from_y2 = from_y2 - SPACE_HALF;
-                                            to_y2 = to_y2 - SPACE_HALF;
+                                            from_y2 = from_y2 - tie_height;
+                                            to_y2 = to_y2 - tie_height;
                                         }
                                     }
 
-                                    let rect = NRect::new(-5., -5., 10., 10.);
-                                    graphic_items.push(nrectext2graphic(&NRectExt::new(rect, NRectType::Dev(true, "green".to_string())), from_x2, from_y2).unwrap());
-                                    let rect = NRect::new(-5., -5., 10., 10.);
-                                    graphic_items.push(nrectext2graphic(&NRectExt::new(rect, NRectType::Dev(true, "lime".to_string())), to_x2, to_y2).unwrap());
+                                    // let rect = NRect::new(-5., -5., 10., 10.);
+                                    // graphic_items.push(nrectext2graphic(&NRectExt::new(rect, NRectType::Dev(true, "green".to_string())), from_x, from_y).unwrap());
+                                    // let rect = NRect::new(-5., -5., 10., 10.);
+                                    // graphic_items.push(nrectext2graphic(&NRectExt::new(rect, NRectType::Dev(true, "lime".to_string())), to_x, to_y).unwrap());
+                                    // let rect = NRect::new(-5., -5., 10., 10.);
+                                    // graphic_items.push(nrectext2graphic(&NRectExt::new(rect, NRectType::Dev(true, "green".to_string())), from_x2, from_y2).unwrap());
+                                    // let rect = NRect::new(-5., -5., 10., 10.);
+                                    // graphic_items.push(nrectext2graphic(&NRectExt::new(rect, NRectType::Dev(true, "lime".to_string())), to_x2, to_y2).unwrap());
+
+                                    let points = bezieer(NPoint(from_x, from_y), NPoint(from_x2, from_y2), NPoint(to_x2, to_y2), NPoint(to_x, to_y), TIE_SEGMENTS);
+                                    let mut segments = vec![PathSegment::M(points[0].0, points[0].1)];
+                                    segments.extend(points.iter().skip(1).map(|p| PathSegment::L(p.0, p.1)).collect::<Vec<_>>());
+
+                                    let points = bezieer(
+                                        NPoint(to_x, to_y),
+                                        NPoint(to_x2, to_y2 + from_tie_direction.sign() * TIE_THICKNESS),
+                                        NPoint(from_x2, from_y2 + from_tie_direction.sign() * TIE_THICKNESS),
+                                        NPoint(from_x, from_y),
+                                        TIE_SEGMENTS,
+                                    );
+                                    segments.extend(points.iter().skip(1).map(|p| PathSegment::L(p.0, p.1)).collect::<Vec<_>>());
+                                    segments.push(PathSegment::Z);
+                                    graphic_items.push(Path(PathSegments(segments), Strokestyle(2.0, Black), Fillstyle(Black)));
                                 }
                                 TieToType::LetRing => todo!(),
                             },
@@ -314,6 +339,7 @@ fn output_ties(matrix: &RMatrix) -> GraphicItems {
                     }
                 }
             }
+            itemidx += 1;
         }
     }
 
@@ -468,3 +494,50 @@ fn output_main_elements(matrix: &RMatrix, draw_dev_frames: bool) -> GraphicItems
 
 //     adjustment_x + head_x
 // }
+
+// class Bezieer {
+// 	static public function coordinates(anchor1:Pnt, control1:Pnt, control2:Pnt, anchor2:Pnt, ?segments:Int = 15):Pnts {
+// 		var coord:Pnts = [];
+// 		coord.push(anchor1);
+// 		var posx:Float;
+// 		var posy:Float;
+// 		for (i in 0...segments) {
+// 			var u = i / segments;
+
+// 			posx = Math.pow(u, 3) * (anchor2.x + 3 * (control1.x - control2.x) - anchor1.x)
+// 				+ 3 * Math.pow(u, 2) * (anchor1.x - 2 * control1.x + control2.x)
+// 				+ 3 * u * (control1.x - anchor1.x)
+// 				+ anchor1.x;
+
+// 			posy = Math.pow(u, 3) * (anchor2.y + 3 * (control1.y - control2.y) - anchor1.y)
+// 				+ 3 * Math.pow(u, 2) * (anchor1.y - 2 * control1.y + control2.y)
+// 				+ 3 * u * (control1.y - anchor1.y)
+// 				+ anchor1.y;
+
+// 			coord.push({x: posx, y: posy});
+// 		}
+// 		coord.push(anchor2);
+// 		return coord;
+// 	}
+// }
+
+pub fn bezieer(anchor1: NPoint, control1: NPoint, control2: NPoint, anchor2: NPoint, segments: u8) -> Vec<NPoint> {
+    let mut coords: Vec<NPoint> = vec![];
+
+    // coords.push(anchor1);
+    let mut posx: f32;
+    let mut posy: f32;
+    for i in 0..segments {
+        let u = i as f32 / segments as f32;
+
+        posx =
+            u.powf(3.0) * (anchor2.0 + 3.0 * (control1.0 - control2.0) - anchor1.0) + 3.0 * u.powf(2.0) * (anchor1.0 - 2.0 * control1.0 + control2.0) + 3.0 * u * (control1.0 - anchor1.0) + anchor1.0;
+
+        posy =
+            u.powf(3.0) * (anchor2.1 + 3.0 * (control1.1 - control2.1) - anchor1.1) + 3.0 * u.powf(2.0) * (anchor1.1 - 2.0 * control1.1 + control2.1) + 3.0 * u * (control1.1 - anchor1.1) + anchor1.1;
+
+        coords.push(NPoint(posx, posy));
+    }
+    coords.push(anchor2);
+    coords
+}
