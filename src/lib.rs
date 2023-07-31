@@ -6,9 +6,8 @@
 #![allow(clippy::uninlined_format_args)]
 #![allow(clippy::useless_format)]
 
+pub mod prelude;
 pub mod render;
-
-use crate::render::dev::*;
 
 #[cfg(test)]
 mod tests {
