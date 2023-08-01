@@ -153,6 +153,8 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
             TieToType::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Gray))),
         },
 
+        NRectType::HelpLine => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Black))),
+
         NRectType::LyricChar(c) => {
             //
             fn get_glyph_path(p: Vec<PathSegment>, rect: &NRect) -> Option<GraphicItem> {
