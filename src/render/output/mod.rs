@@ -156,7 +156,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
         NRectType::HelpLine => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Black))),
 
         NRectType::LyricChar(c) => {
-            let path = crate::render::fonts::Merriweather_Regular::get_path(*c).to_vec();
+            let path = crate::render::fonts::merriweather_regular::get_path(*c).to_vec();
             Some(Path(
                 PathSegments(path)
                     .scale_path(LYRICS_FONT_SCALE, LYRICS_FONT_SCALE)

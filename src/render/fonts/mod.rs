@@ -1,2 +1,2 @@
-pub mod Merriweather_Regular;
 pub mod ebgaramond;
+pub mod merriweather_regular;
