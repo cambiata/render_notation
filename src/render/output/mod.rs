@@ -159,8 +159,8 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
             let path = crate::render::fonts::Merriweather_Regular::get_path(*c).to_vec();
             Some(Path(
                 PathSegments(path)
-                    .scale_path(FONT_SCALE_LYRICS, FONT_SCALE_LYRICS)
-                    .move_path(r.0, r.1 + GLYPH_HEIGHT * FONT_SCALE_LYRICS),
+                    .scale_path(LYRICS_FONT_SCALE, LYRICS_FONT_SCALE)
+                    .move_path(r.0, r.1 + GLYPH_HEIGHT * LYRICS_FONT_SCALE),
                 NoStroke,
                 Fillstyle(Black),
                 PathCacheInfo::NoCache,
