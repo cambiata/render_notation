@@ -12,10 +12,11 @@ pub mod render;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::render::fonts::Merriweather_Regular::get_path;
 
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn example() {
+        let path = get_path('a');
+        dbg!(path);
     }
 }

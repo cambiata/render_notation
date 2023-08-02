@@ -156,27 +156,15 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
         NRectType::HelpLine => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Black))),
 
         NRectType::LyricChar(c) => {
-            //
-            fn get_glyph_path(p: Vec<PathSegment>, rect: &NRect) -> Option<GraphicItem> {
-                Some(Path(
-                    PathSegments(p)
-                        .scale_path(FONT_SCALE_LYRICS, -FONT_SCALE_LYRICS)
-                        .move_path(rect.0, rect.1 + GLYPH_HEIGHT * FONT_SCALE_LYRICS),
-                    NoStroke,
-                    Fillstyle(Black),
-                    PathCacheInfo::NoCache,
-                ))
-            }
-
-            match c {
-                'a' => get_glyph_path(EBGARAMOND_LOWER_A.to_vec(), &r),
-                'b' => get_glyph_path(EBGARAMOND_LOWER_B.to_vec(), &r),
-                'c' => get_glyph_path(EBGARAMOND_LOWER_C.to_vec(), &r),
-                'A' => get_glyph_path(EBGARAMOND_UPPER_A.to_vec(), &r),
-                'B' => get_glyph_path(EBGARAMOND_UPPER_B.to_vec(), &r),
-                'C' => get_glyph_path(EBGARAMOND_UPPER_C.to_vec(), &r),
-                _ => None,
-            }
+            let path = crate::render::fonts::Merriweather_Regular::get_path(*c).to_vec();
+            Some(Path(
+                PathSegments(path)
+                    .scale_path(FONT_SCALE_LYRICS, FONT_SCALE_LYRICS)
+                    .move_path(r.0, r.1 + GLYPH_HEIGHT * FONT_SCALE_LYRICS),
+                NoStroke,
+                Fillstyle(Black),
+                PathCacheInfo::NoCache,
+            ))
         }
         NRectType::Dev(ellipse, color) => {
             let color = Color::from_str(color);
