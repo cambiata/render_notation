@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::render::fonts::ebgaramond::GLYPH_HEIGHT;
+
 use graphics::prelude::*;
 use notation_rs::prelude::*;
 use std::cell::Ref;
@@ -112,6 +112,97 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
                 PathCacheInfo::NoCache,
             )),
         },
+
+        NRectType::KeySignature(key, opt_clef) => {
+            //
+            match key {
+                Key::Sharps(n) => {
+                    let mut a = PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec()).inv01().move_path(0.0, -SPACE * 2.0);
+                    if n >= &2 {
+                        a.extend(&PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec()).inv01().move_path(ACCIDENTAL_WIDTH_SHARP, -SPACE * 0.5));
+                    }
+                    if n >= &3 {
+                        a.extend(&PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec()).inv01().move_path(ACCIDENTAL_WIDTH_SHARP * 2.0, -SPACE * 2.5));
+                    }
+                    if n >= &4 {
+                        a.extend(&PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec()).inv01().move_path(ACCIDENTAL_WIDTH_SHARP * 3.0, -SPACE * 1.0));
+                    }
+                    if n >= &5 {
+                        a.extend(&PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec()).inv01().move_path(ACCIDENTAL_WIDTH_SHARP * 4.0, -SPACE * 3.0));
+                    }
+                    if n >= &6 {
+                        a.extend(&PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec()).inv01().move_path(ACCIDENTAL_WIDTH_SHARP * 5.0, -SPACE * 1.5));
+                    }
+                    Some(Path(a.move_path(r.0, r.1 + SPACE * 3.5), NoStroke, Fillstyle(Black), PathCacheInfo::NoCache))
+                }
+                Key::Flats(n) => {
+                    let mut a = PathSegments(CADENZA_ACCIDENTAL_FLAT.to_vec()).inv01();
+                    if n >= &2 {
+                        a.extend(&PathSegments(CADENZA_ACCIDENTAL_FLAT.to_vec()).inv01().move_path(ACCIDENTAL_WIDTH_FLAT, -SPACE * 1.5));
+                    }
+                    if n >= &3 {
+                        a.extend(&PathSegments(CADENZA_ACCIDENTAL_FLAT.to_vec()).inv01().move_path(ACCIDENTAL_WIDTH_FLAT * 2.0, SPACE * 0.5));
+                    }
+                    if n >= &4 {
+                        a.extend(&PathSegments(CADENZA_ACCIDENTAL_FLAT.to_vec()).inv01().move_path(ACCIDENTAL_WIDTH_FLAT * 3.0, -SPACE * 1.0));
+                    }
+                    if n >= &5 {
+                        a.extend(&PathSegments(CADENZA_ACCIDENTAL_FLAT.to_vec()).inv01().move_path(ACCIDENTAL_WIDTH_FLAT * 4.0, SPACE * 1.0));
+                    }
+                    if n >= &6 {
+                        a.extend(&PathSegments(CADENZA_ACCIDENTAL_FLAT.to_vec()).inv01().move_path(ACCIDENTAL_WIDTH_FLAT * 5.0, -SPACE * 0.5));
+                    }
+                    Some(Path(a.move_path(r.0, r.1 + SPACE * 3.5), NoStroke, Fillstyle(Black), PathCacheInfo::NoCache))
+                }
+                Key::Open => None,
+                Key::Naturals(n) => todo!("Key::Naturals not defined yet!"),
+            }
+        }
+
+        NRectType::TimeSignature(time) => {
+            let a = match time {
+                Time::Common => PathSegments(CADENZA_TIME_COMMON.to_vec()).inv01(),
+                Time::Cut => PathSegments(CADENZA_TIME_CUT.to_vec()).inv01(),
+                Time::Standard(nom, denom) => {
+                    let x = match nom {
+                        TimeNominator::Three => 5.0,
+                        _ => 0.0,
+                    };
+                    // PathSegments(CADENZA_NUMBER_THREE.to_vec()).inv01().move_path(x, -SPACE);
+                    let mut a = match denom {
+                        TimeDenominator::Wholes => PathSegments(CADENZA_NUMBER_ONE.to_vec()).inv01().move_path(x, SPACE),
+                        TimeDenominator::Halves => PathSegments(CADENZA_NUMBER_TWO.to_vec()).inv01().move_path(x, SPACE),
+                        TimeDenominator::Quarters => PathSegments(CADENZA_NUMBER_FOUR.to_vec()).inv01().move_path(x, SPACE),
+                        TimeDenominator::Egigths => PathSegments(CADENZA_NUMBER_EIGHT.to_vec()).inv01().move_path(x, SPACE),
+
+                        _ => PathSegments(CADENZA_NUMBER_FOUR.to_vec()).inv01().move_path(x, SPACE),
+                    };
+
+                    let x = match denom {
+                        TimeDenominator::Halves => 5.0,
+                        _ => 0.0,
+                    };
+                    match nom {
+                        TimeNominator::One => a.extend(&PathSegments(CADENZA_NUMBER_ONE.to_vec()).inv01().move_path(x, -SPACE)),
+                        TimeNominator::Two => a.extend(&PathSegments(CADENZA_NUMBER_TWO.to_vec()).inv01().move_path(x, -SPACE)),
+                        TimeNominator::Three => a.extend(&PathSegments(CADENZA_NUMBER_THREE.to_vec()).inv01().move_path(x, -SPACE)),
+                        // TimeNominator::Five => a.extend(&PathSegments(CADENZA_NUMBER_FIVE.to_vec()).inv01().move_path(x, -SPACE)),
+                        TimeNominator::Six => a.extend(&PathSegments(CADENZA_NUMBER_SIX.to_vec()).inv01().move_path(x, -SPACE)),
+                        // TimeNominator::Seven => a.extend(&PathSegments(CADENZA_NUMBER_SEVEN.to_vec()).inv01().move_path(x, -SPACE)),
+                        // TimeNominator::Eight => a.extend(&PathSegments(CADENZA_NUMBER_EIGHT.to_vec()).inv01().move_path(x, -SPACE)),
+                        TimeNominator::Nine => a.extend(&PathSegments(CADENZA_NUMBER_NINE.to_vec()).inv01().move_path(x, -SPACE)),
+                        TimeNominator::Twelve => {
+                            a.extend(&PathSegments(CADENZA_NUMBER_ONE.to_vec()).inv01().move_path(x, -SPACE));
+                            a.extend(&PathSegments(CADENZA_NUMBER_TWO.to_vec()).inv01().move_path(SPACE, -SPACE));
+                        }
+                        _ => a.extend(&PathSegments(CADENZA_NUMBER_FOUR.to_vec()).inv01().move_path(x, -SPACE)),
+                    }
+                    a
+                }
+            };
+            Some(Path(a.move_path(r.0, r.1 + SPACE * 3.0), NoStroke, Fillstyle(Black), PathCacheInfo::NoCache))
+        }
+
         NRectType::Accidental(accidental) => {
             let p = match accidental {
                 Accidental::Sharp => CADENZA_ACCIDENTAL_SHARP.to_vec(),
@@ -135,9 +226,13 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
             None //Some(Path(PathSegments(CADENZA_3.to_vec()).inv01(), NoStroke, Fillstyle(Black)))
         }
 
-        NRectType::DevStem(color) => {
+        NRectType::ColorRect(color) => {
             let color = Color::from_str(color);
             Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(color)))
+        }
+        NRectType::StrokeRect(color) => {
+            let color = Color::from_str(color);
+            Some(Rect(r.0, r.1, r.2, r.3, Strokestyle(1.0, color), NoFill))
         }
 
         NRectType::TieFrom(_, _, ttype, _, _, _, _) => match ttype {
