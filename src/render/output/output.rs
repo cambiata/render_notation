@@ -238,15 +238,15 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
         }
 
         NRectType::TieFrom(_, _, ttype, _, _, _, _) => match ttype {
-            // TieFromType::Standard => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Green))),
-            TieFromType::Standard => None,
+            TieFromType::Standard => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Green))),
+            // TieFromType::Standard => None,
             TieFromType::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(LightGray))),
             TieFromType::UnresolvedInChunk => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Red))),
         },
 
         NRectType::TieTo(ttype) => match ttype {
-            // TieToType::ResolveTieFrom(_, _) => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Lime))),
-            TieToType::ResolveTieFrom(_, _) => None,
+            TieToType::ResolveTieFrom(_, _) => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Lime))),
+            // TieToType::ResolveTieFrom(_, _) => None,
             TieToType::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Gray))),
         },
 
@@ -284,7 +284,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, draw_dev_frames: bool) -> String {
     graphic_items.extend(output_notelines(matrix));
     graphic_items.extend(output_main_elements(matrix, draw_dev_frames));
     graphic_items.extend(output_beamgroups(matrix));
-    graphic_items.extend(output_ties(matrix));
+    // graphic_items.extend(output_ties(matrix));
 
     let svg = SvgBuilder::new().build(graphic_items).unwrap();
     // std::fs::write(svg_filename, svg).unwrap();

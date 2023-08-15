@@ -220,7 +220,7 @@ pub fn output_beamgroups(matrix: &RMatrix) -> GraphicItems {
                 // upper beams
                 let NPoint(item_x, item_y) = item.coords.expect("RItem coords should always be calculated!");
                 //------------------------------------------------------------------
-                match &item.note_beam {
+                match &item.note_beamdata {
                     RItemBeam::Single(ref data) => {
                         if duration_has_stem(&data.duration) {
                             graphic_items.extend(do_single(data, item.coords.unwrap()));
@@ -239,7 +239,7 @@ pub fn output_beamgroups(matrix: &RMatrix) -> GraphicItems {
                     }
                     _ => {}
                 }
-                match &item.note2_beam {
+                match &item.note2_beamdata {
                     RItemBeam::Single(data) => {
                         if duration_has_stem(&data.duration) {
                             graphic_items.extend(do_single(data, item.coords.unwrap()));
