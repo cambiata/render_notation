@@ -1,6 +1,6 @@
 use std::{cell::Ref, collections::BTreeMap};
 
-use crate::prelude::*;
+use crate::{prelude::*, render::output::rects2graphic::nrectext2graphic};
 use graphics::prelude::*;
 use notation_rs::prelude::*;
 
