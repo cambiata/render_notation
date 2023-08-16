@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use graphics::builder::{BuilderOptions, SizeUnit};
 use graphics::prelude::*;
 use notation_rs::prelude::*;
 use std::cell::Ref;
@@ -11,7 +12,15 @@ pub fn matrix_to_svg(matrix: &RMatrix, draw_dev_frames: bool) -> String {
     graphic_items.extend(output_beamgroups(matrix));
     graphic_items.extend(output_ties(matrix));
 
-    let svg = SvgBuilder::new().build(graphic_items).unwrap();
+    let svg = SvgBuilder::new()
+        .build(
+            graphic_items,
+            Some(BuilderOptions {
+                size_unit: SizeUnit::Rem,
+                size_scaling: 0.3,
+            }),
+        )
+        .unwrap();
     // std::fs::write(svg_filename, svg).unwrap();
     svg
 }
