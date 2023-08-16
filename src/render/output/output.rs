@@ -5,24 +5,14 @@ use notation_rs::prelude::*;
 use std::cell::Ref;
 use std::collections::BTreeMap;
 
-pub fn matrix_to_svg(matrix: &RMatrix, draw_dev_frames: bool, scaling: Option<f32>) -> String {
+pub fn matrix_to_svg(matrix: &RMatrix, draw_dev_frames: bool, options: Option<BuilderOptions>) -> String {
     let mut graphic_items = GraphicItems::new();
     graphic_items.extend(output_notelines(matrix));
     graphic_items.extend(output_main_elements(matrix, draw_dev_frames));
     graphic_items.extend(output_beamgroups(matrix));
     graphic_items.extend(output_ties(matrix));
 
-    let scaling = scaling.unwrap_or(0.03);
-
-    let svg = SvgBuilder::new()
-        .build(
-            graphic_items,
-            Some(BuilderOptions {
-                size_unit: SizeUnit::Rem,
-                size_scaling: scaling,
-            }),
-        )
-        .unwrap();
+    let svg = SvgBuilder::new().build(graphic_items, options).unwrap();
     // std::fs::write(svg_filename, svg).unwrap();
     svg
 }
