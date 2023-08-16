@@ -176,7 +176,6 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
                         TimeDenominator::Halves => PathSegments(CADENZA_NUMBER_TWO.to_vec()).inv01().move_path(x, SPACE),
                         TimeDenominator::Quarters => PathSegments(CADENZA_NUMBER_FOUR.to_vec()).inv01().move_path(x, SPACE),
                         TimeDenominator::Egigths => PathSegments(CADENZA_NUMBER_EIGHT.to_vec()).inv01().move_path(x, SPACE),
-
                         _ => PathSegments(CADENZA_NUMBER_FOUR.to_vec()).inv01().move_path(x, SPACE),
                     };
 
@@ -187,7 +186,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
                     match nom {
                         TimeNominator::One => a.extend(&PathSegments(CADENZA_NUMBER_ONE.to_vec()).inv01().move_path(x, -SPACE)),
                         TimeNominator::Two => a.extend(&PathSegments(CADENZA_NUMBER_TWO.to_vec()).inv01().move_path(x, -SPACE)),
-                        TimeNominator::Three => a.extend(&PathSegments(CADENZA_NUMBER_THREE.to_vec()).inv01().move_path(x, -SPACE)),
+                        TimeNominator::Three => a.extend(&PathSegments(CADENZA_NUMBER_THREE.to_vec()).inv01().move_path(x + 6.0, -SPACE)),
                         // TimeNominator::Five => a.extend(&PathSegments(CADENZA_NUMBER_FIVE.to_vec()).inv01().move_path(x, -SPACE)),
                         TimeNominator::Six => a.extend(&PathSegments(CADENZA_NUMBER_SIX.to_vec()).inv01().move_path(x, -SPACE)),
                         // TimeNominator::Seven => a.extend(&PathSegments(CADENZA_NUMBER_SEVEN.to_vec()).inv01().move_path(x, -SPACE)),
@@ -204,6 +203,27 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
             };
             Some(Path(a.move_path(r.0, r.1 + SPACE * 3.0), NoStroke, Fillstyle(Black), PathCacheInfo::NoCache))
         }
+
+        NRectType::Barline(btype) => match btype {
+            BarlineType::Single => Some(Rect(r.0 + (r.2 - BARLINE_WIDTH_SINGLE), r.1, r.2, r.3, NoStroke, Fillstyle(Black))),
+            BarlineType::Double => {
+                let mut line = PathSegments([M(r.0, r.1), L(r.0 + BARLINE_WIDTH_SINGLE, r.1), L(r.0 + BARLINE_WIDTH_SINGLE, r.1 + r.3), L(r.0, r.1 + r.3)].to_vec());
+                let line2 = PathSegments([M(r.0, r.1), L(r.0 + BARLINE_WIDTH_SINGLE, r.1), L(r.0 + BARLINE_WIDTH_SINGLE, r.1 + r.3), L(r.0, r.1 + r.3)].to_vec())
+                    .move_path(BARLINE_DOUBLE_SPACE - BARLINE_WIDTH_SINGLE, 0.);
+                line.extend(&line2);
+                let path = Path(line, NoStroke, Fillstyle(Black), PathCacheInfo::NoCache);
+                Some(path)
+            }
+
+            BarlineType::Final => todo!(),
+            BarlineType::RepeatTo => todo!(),
+            BarlineType::RepeatFrom => todo!(),
+            BarlineType::RepeatToAndFrom => todo!(),
+            BarlineType::FraseTick => {
+                let path = Line(r.0, r.1 + SPACE_HALF, r.0 + SPACE_HALF, r.1 - SPACE, Strokestyle(4.0, Black));
+                Some(path)
+            }
+        },
 
         NRectType::Accidental(accidental) => {
             let p = match accidental {
@@ -238,15 +258,15 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
         }
 
         NRectType::TieFrom(_, _, ttype, _, _, _, _) => match ttype {
-            TieFromType::Standard => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Green))),
-            // TieFromType::Standard => None,
+            // TieFromType::Standard => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Green))),
+            TieFromType::Standard => None,
             TieFromType::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(LightGray))),
             TieFromType::UnresolvedInChunk => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Red))),
         },
 
         NRectType::TieTo(ttype) => match ttype {
-            TieToType::ResolveTieFrom(_, _) => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Lime))),
-            // TieToType::ResolveTieFrom(_, _) => None,
+            // TieToType::ResolveTieFrom(_, _) => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Lime))),
+            TieToType::ResolveTieFrom(_, _) => None,
             TieToType::LetRing => Some(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Gray))),
         },
 
