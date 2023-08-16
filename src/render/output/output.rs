@@ -17,7 +17,7 @@ pub fn matrix_to_svg(matrix: &RMatrix, draw_dev_frames: bool) -> String {
             graphic_items,
             Some(BuilderOptions {
                 size_unit: SizeUnit::Rem,
-                size_scaling: 0.3,
+                size_scaling: 0.05,
             }),
         )
         .unwrap();
