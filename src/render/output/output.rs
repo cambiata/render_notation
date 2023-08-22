@@ -17,6 +17,17 @@ pub fn matrix_to_svg(matrix: &RMatrix, draw_dev_frames: bool, options: Option<Bu
     svg
 }
 
+pub fn matrix_to_fuse(matrix: &RMatrix, draw_dev_frames: bool, options: Option<BuilderOptions>) -> String {
+    let mut graphic_items = GraphicItems::new();
+    graphic_items.extend(output_notelines(matrix));
+    graphic_items.extend(output_main_elements(matrix, draw_dev_frames));
+    graphic_items.extend(output_beamgroups(matrix));
+    graphic_items.extend(output_ties(matrix));
+    let fuse = FuseBuilder::new().build(graphic_items, options).unwrap();
+
+    fuse
+}
+
 pub fn bezieer(anchor1: NPoint, control1: NPoint, control2: NPoint, anchor2: NPoint, segments: u8) -> Vec<NPoint> {
     let mut coords: Vec<NPoint> = vec![];
 
