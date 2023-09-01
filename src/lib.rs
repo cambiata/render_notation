@@ -8,15 +8,13 @@
 
 pub mod prelude;
 pub mod render;
+pub mod utils;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::render::fonts::Merriweather_Regular::get_path;
+    // use crate::render::fonts::Merriweather_Regular::get_path;
 
     #[test]
-    fn example() {
-        let path = get_path('a');
-        dbg!(path);
-    }
+    fn example() {}
 }

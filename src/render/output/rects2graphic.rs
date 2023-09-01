@@ -1,4 +1,9 @@
 use crate::prelude::*;
+use crate::render::fonts::opensans_regular::{
+    OPENSANS_REGULAR_48, OPENSANS_REGULAR_49, OPENSANS_REGULAR_50, OPENSANS_REGULAR_51, OPENSANS_REGULAR_52, OPENSANS_REGULAR_53, OPENSANS_REGULAR_54, OPENSANS_REGULAR_55, OPENSANS_REGULAR_56,
+    OPENSANS_REGULAR_57,
+};
+use crate::render::fonts::svg_symbols::SVG_SYMBOL_TPL_CIRCLE;
 use graphics::prelude::*;
 use notation_rs::prelude::*;
 use std::cell::Ref;
@@ -89,9 +94,26 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
             }
         }
 
-        NRectType::TplSymbol(figure, octave, accidental) => {
-            //
-            Some(Ellipse(r.0, r.1, r.2, r.3, Strokestyle(7.0, Black), NoFill))
+        NRectType::TplSymbol(figure_nr, octave, accidental) => {
+            let mut circle = PathSegments(SVG_SYMBOL_TPL_CIRCLE.to_vec()).scale_path(0.14, 0.14).move_path(r.0 - 5.9 * SPACE, r.1 - 0.0 * SPACE);
+
+            let figure = match figure_nr {
+                '0' => PathSegments(OPENSANS_REGULAR_48.to_vec()).scale_path(0.07, 0.07).move_path(r.0 + SPACE * 0.85, r.1 + SPACE * 2.2),
+                '1' => PathSegments(OPENSANS_REGULAR_49.to_vec()).scale_path(0.07, 0.07).move_path(r.0 + SPACE * 0.85, r.1 + SPACE * 2.2),
+                '2' => PathSegments(OPENSANS_REGULAR_50.to_vec()).scale_path(0.07, 0.07).move_path(r.0 + SPACE * 0.85, r.1 + SPACE * 2.2),
+                '3' => PathSegments(OPENSANS_REGULAR_51.to_vec()).scale_path(0.07, 0.07).move_path(r.0 + SPACE * 0.85, r.1 + SPACE * 2.2),
+                '4' => PathSegments(OPENSANS_REGULAR_52.to_vec()).scale_path(0.07, 0.07).move_path(r.0 + SPACE * 0.85, r.1 + SPACE * 2.2),
+                '5' => PathSegments(OPENSANS_REGULAR_53.to_vec()).scale_path(0.07, 0.07).move_path(r.0 + SPACE * 0.85, r.1 + SPACE * 2.2),
+                '6' => PathSegments(OPENSANS_REGULAR_54.to_vec()).scale_path(0.07, 0.07).move_path(r.0 + SPACE * 0.85, r.1 + SPACE * 2.2),
+                '7' => PathSegments(OPENSANS_REGULAR_55.to_vec()).scale_path(0.07, 0.07).move_path(r.0 + SPACE * 0.85, r.1 + SPACE * 2.2),
+                '8' => PathSegments(OPENSANS_REGULAR_56.to_vec()).scale_path(0.07, 0.07).move_path(r.0 + SPACE * 0.85, r.1 + SPACE * 2.2),
+                '9' => PathSegments(OPENSANS_REGULAR_57.to_vec()).scale_path(0.07, 0.07).move_path(r.0 + SPACE * 0.85, r.1 + SPACE * 2.2),
+                _ => PathSegments(OPENSANS_REGULAR_48.to_vec()).scale_path(0.07, 0.07).move_path(r.0 + SPACE * 0.85, r.1 + SPACE * 2.2),
+            };
+
+            circle.extend(&figure);
+
+            Some(Path(circle, NoStroke, Fillstyle(Black), PathCacheInfo::NoCache))
         }
 
         NRectType::Clef(clef) => match clef {
@@ -118,7 +140,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
         NRectType::KeySignature(key, opt_clef) => {
             //
             match key {
-                Key::Sharps(n) => {
+                Key::Sharps(n, _) => {
                     let mut a = PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec()).inv01().move_path(0.0, -SPACE * 2.0);
                     if n >= &2 {
                         a.extend(&PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec()).inv01().move_path(ACCIDENTAL_WIDTH_SHARP, -SPACE * 0.5));
@@ -137,7 +159,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
                     }
                     Some(Path(a.move_path(r.0, r.1 + SPACE * 3.5), NoStroke, Fillstyle(Black), PathCacheInfo::NoCache))
                 }
-                Key::Flats(n) => {
+                Key::Flats(n, _) => {
                     let mut a = PathSegments(CADENZA_ACCIDENTAL_FLAT.to_vec()).inv01();
                     if n >= &2 {
                         a.extend(&PathSegments(CADENZA_ACCIDENTAL_FLAT.to_vec()).inv01().move_path(ACCIDENTAL_WIDTH_FLAT, -SPACE * 1.5));
@@ -157,7 +179,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Option<Graphi
                     Some(Path(a.move_path(r.0, r.1 + SPACE * 3.5), NoStroke, Fillstyle(Black), PathCacheInfo::NoCache))
                 }
                 Key::Open => None,
-                Key::Naturals(n) => todo!("Key::Naturals not defined yet!"),
+                Key::Naturals(n, _) => todo!("Key::Naturals not defined yet!"),
             }
         }
 
