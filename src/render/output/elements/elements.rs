@@ -1,79 +1,97 @@
-use std::{cell::Ref, collections::BTreeMap};
+use std::{
+    cell::{Ref, RefMut},
+    collections::BTreeMap,
+    sync::Arc,
+};
 
-use crate::{prelude::*, render::output::rects2graphic::nrectext2graphic};
+use crate::{
+    prelude::*,
+    render::{
+        fonts::opensans_regular::{OPENSANS_REGULAR_189, OPENSANS_REGULAR_49},
+        output::rects2graphic::nrectext2graphic,
+    },
+};
 use graphics::prelude::*;
 use itertools::{Itertools, TupleWindows};
 use notation_rs::prelude::*;
 
-// pub fn output_lines(matrix: &RMatrix) -> GraphicItems {
-//     let mut graphic_items = GraphicItems::new();
-//     for row in matrix.rows.iter() {
-//         let row = row.borrow();
-//         // let mut map_rect: BTreeMap<(usize, i8), Rc<RefCell<NRectExt>>> = BTreeMap::new();
-//         let mut map_rect: BTreeMap<(usize, i8), bool> = BTreeMap::new();
-//         let mut map_ritem: BTreeMap<(usize, i8), Rc<RefCell<RItem>>> = BTreeMap::new();
-//         let mut itemidx = 0;
-//         //     for item in &row.items {
-//         //         if let Some(item) = item {
-//         //             let item_: Ref<RItem> = item.borrow();
-//         //             if let Some(nrects) = &item_.nrects {
-//         //                 let lines_from = nrects.iter().filter(|nrect| nrect.borrow().is_line_from()).collect::<Vec<_>>();
-//         //                 for line in lines_from {
-//         //                     let line: Ref<NRectExt> = line.borrow();
-//         //                     match &line.1 {
-//         //                         NRectType::LineFrom(level_from, line_type) => match line_type {
-//         //                             _ => {
-//         //                                 println!("Hittade en LineTo, från item nr {} med level {}", item_.id, level_from);
-//         //                                 map_rect.insert((item_.id, *level_from), true);
-//         //                                 map_ritem.insert((item_.id, *level_from), item.clone());
-//         //                             } // TieFromType::Standard => {
-//         //                         },
-//         //                         _ => {}
-//         //                     }
-//         //                 }
-//         //             }
-//         //         }
-//         //         itemidx += 1;
-//         //     }
+pub fn output_lines(matrix: &RMatrix) -> GraphicItems {
+    let mut graphic_items = GraphicItems::new();
 
-//         //     for item in &row.items {
-//         //         if let Some(item) = item {
-//         //             let item_: Ref<RItem> = item.borrow();
-//         //             if let Some(nrects) = &item_.nrects {
-//         //                 let lines_from = nrects.iter().filter(|nrect| nrect.borrow().is_line_to()).collect::<Vec<_>>();
-//         //                 for line_from in lines_from {
-//         //                     dbg!(line_from);
-//         //                     let line_from: Ref<NRectExt> = line_from.borrow();
-//         //                     match &line_from.1 {
-//         //                         NRectType::LineTo(from_level, to_level, headlinetype) => {}
-//         //                         _ => {}
-//         //                     }
-//         //                 }
-//         //             }
-//         //         }
-//         //     }
-//         // }
+    for row in matrix.rows.iter() {
+        let row = row.borrow();
+        for item in &row.items {}
+        let items: &Vec<Option<Rc<RefCell<RItem>>>> = &row.items;
+        use std::slice::Iter;
+        let items_iter: Iter<_> = items.iter();
+        use notation_rs::core::HEAD_WIDTH_WHITE;
+        for (itemidx, (left, right)) in items_iter.tuple_windows().enumerate() {
+            if left.is_some() && right.is_some() {
+                let left: Ref<RItem> = left.as_ref().unwrap().borrow();
+                let mut right: RefMut<RItem> = right.as_ref().unwrap().borrow_mut();
+                let left_coords = left.coords.expect("RItem coords should always be calculated!");
+                let right_coords = right.coords.expect("RItem coords should always be calculated!");
+                let lines_to = &right.lines;
+                for (idx, line_to) in lines_to.iter().enumerate() {
+                    let rect = NRect::new(left_coords.0, left_coords.1, right_coords.0 - left_coords.0, right_coords.1 - left_coords.1);
+                    let nrect = NRectExt::new(rect, NRectType::LineTo(line_to.0, line_to.1, line_to.2));
 
-//         for item in &row.items {}
-//         let tw: &Vec<Option<Rc<RefCell<RItem>>>> = &row.items;
-//         use std::slice::Iter;
-//         let tw_iter: Iter<_> = tw.iter();
-//         // let tw_win = tw_iter.tuple_windows();
+                    let x = left_coords.0 + SPACE * 1.8;
+                    let x2 = right_coords.0 - SPACE * 0.4;
+                    let y = left_coords.1 + line_to.0 as f32 * SPACE_HALF + 4.0;
+                    let y2 = right_coords.1 + line_to.1 as f32 * SPACE_HALF + 4.0;
 
-//         for (idx, (left, right)) in tw_iter.tuple_windows().enumerate() {
-//             if left.is_some() && right.is_some() {
-//                 let left: Ref<RItem> = left.as_ref().unwrap().borrow();
-//                 let right: Ref<RItem> = right.as_ref().unwrap().borrow();
-//                 let lines_to = &right.nrects.as_ref().unwrap().iter().filter(|nrect| nrect.borrow().is_line_to()).collect::<Vec<_>>();
+                    match line_to.2 {
+                        HeadLineType::Halfstep => {
+                            let xmid = x + (x2 - x) / 2.0;
+                            let ymid = y + (y2 - y) / 2.0;
+                            let p = GraphicItem::Path(
+                                PathSegments([M(x, y), L(xmid, ymid + 15.0), L(x2, y2)].to_vec()),
+                                Strokestyle(5.0, Tomato),
+                                NoFill,
+                                PathCacheInfo::NoCache,
+                            );
+                            graphic_items.push(p);
+                            let p1 = GraphicItem::Path(
+                                PathSegments(OPENSANS_REGULAR_189.to_vec()).scale_path(0.05, 0.05).move_path(xmid - 10.0, ymid + 56.0),
+                                NoStroke,
+                                Fillstyle(Black),
+                                PathCacheInfo::NoCache,
+                            );
+                            graphic_items.push(p1);
+                        }
 
-//                 let left_coords = left.coords.expect("RItem coords should always be calculated!");
-//                 let right_coords = right.coords.expect("RItem coords should always be calculated!");
-//                 dbg!(left_coords, right_coords);
-//             }
-//         }
-//     }
-//     graphic_items
-// }
+                        HeadLineType::Wholestep => {
+                            let xmid = x + (x2 - x) / 2.0;
+                            let ymid = y + (y2 - y) / 2.0;
+                            let p = GraphicItem::Path(
+                                //  L(x + 3.0, y + 12.0), L(x2 - 3.0, y2 + 12.0),
+                                PathSegments([M(x, y), L(x2, y2)].to_vec()),
+                                Strokestyle(5.0, Dodgerblue),
+                                NoFill,
+                                PathCacheInfo::NoCache,
+                            );
+                            graphic_items.push(p);
+
+                            let p1 = GraphicItem::Path(
+                                PathSegments(OPENSANS_REGULAR_49.to_vec()).scale_path(0.04, 0.04).move_path(xmid - 10.0, ymid - 30.0),
+                                NoStroke,
+                                Fillstyle(Black),
+                                PathCacheInfo::NoCache,
+                            );
+                            graphic_items.push(p1);
+                        }
+                        _ => {
+                            let graphic_item: GraphicItem = GraphicItem::Line(x, y, x2, y2, Strokestyle(5.0, Green));
+                            graphic_items.push(graphic_item);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    graphic_items
+}
 
 pub fn output_ties(matrix: &RMatrix) -> GraphicItems {
     // drawing of ties
@@ -355,15 +373,15 @@ pub fn output_main_elements(matrix: &RMatrix, draw_dev_frames: bool) -> GraphicI
 
                     if col.duration == 0 || draw_dev_frames {
                         let frame_nrect = NRectExt::new(frame_rect, NRectType::Dev(false, color.to_string()));
-                        let frame_item = nrectext2graphic(&frame_nrect, coords.0, coords.1).unwrap();
+                        let frame_items = nrectext2graphic(&frame_nrect, coords.0, coords.1);
 
-                        graphic_items.push(frame_item);
+                        graphic_items.extend(GraphicItems(frame_items));
                     }
 
                     // glyph rect
-                    if let Some(graphic_item) = nrectext2graphic(&nrect, coords.0, coords.1) {
-                        graphic_items.push(graphic_item);
-                    }
+                    let glyph_items = nrectext2graphic(&nrect, coords.0, coords.1);
+                    graphic_items.extend(GraphicItems(glyph_items));
+
                     // let graphic_item = next2graphic(&nrect, coords.0, coords.1).unwrap();
                 }
             } else {
@@ -371,8 +389,8 @@ pub fn output_main_elements(matrix: &RMatrix, draw_dev_frames: bool) -> GraphicI
                 let x = col.x;
                 let rect = NRect::new(0., 0., 10.0, 10.0);
                 let nrect = NRectExt::new(rect, NRectType::Dev(true, "gray".to_string()));
-                let graphic_item = nrectext2graphic(&nrect, x, y).unwrap();
-                graphic_items.push(graphic_item);
+                let items = nrectext2graphic(&nrect, x, y);
+                graphic_items.extend(GraphicItems(items));
             }
             rowidx += 1;
         }
