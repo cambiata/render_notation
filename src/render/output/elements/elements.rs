@@ -81,8 +81,12 @@ pub fn output_lines(matrix: &RMatrix) -> GraphicItems {
                             );
                             graphic_items.push(p1);
                         }
+                        HeadLineType::LineColor(ncolor) => {
+                            let graphic_item: GraphicItem = GraphicItem::Line(x, y, x2, y2, Strokestyle(5.0, ncolor2color(ncolor)));
+                            graphic_items.push(graphic_item);
+                        }
                         _ => {
-                            let graphic_item: GraphicItem = GraphicItem::Line(x, y, x2, y2, Strokestyle(5.0, Green));
+                            let graphic_item: GraphicItem = GraphicItem::Line(x, y, x2, y2, Strokestyle(5.0, Black));
                             graphic_items.push(graphic_item);
                         }
                     }
@@ -91,6 +95,23 @@ pub fn output_lines(matrix: &RMatrix) -> GraphicItems {
         }
     }
     graphic_items
+}
+
+pub fn ncolor2color(ncolor: NColor) -> Color {
+    match ncolor {
+        NColor::Black => Black,
+        NColor::White => White,
+        NColor::Red => Red,
+        NColor::Blue => Blue,
+        NColor::Dodgerblue => Dodgerblue,
+        NColor::Tomato => Tomato,
+        NColor::Orange => Orange,
+        NColor::Purple => Purple,
+        NColor::Lime => Lime,
+        NColor::Gray => Gray,
+        NColor::LightGray => LightGray,
+        NColor::Green => Green,
+    }
 }
 
 pub fn output_ties(matrix: &RMatrix) -> GraphicItems {
