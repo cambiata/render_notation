@@ -7,6 +7,7 @@ pub fn do_single(first_data: &RItemBeamData, coords: NPoint) -> GraphicItems {
 
     let direction_sign = first_data.direction.sign();
     let first_coords = (*&coords.0 + get_head_x_adjustment(first_data), *&coords.1);
+
     let first_tip_y = first_coords.1 + (first_data.tip_level * SPACE_HALF) + (STEM_LENGTH * SPACE_HALF) * direction_sign;
     let first_bop_y = first_coords.1
         + match first_data.direction {
