@@ -319,44 +319,110 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
 
         NRectType::LineFrom(level_from, line_to, line_type) => vec![Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Orange))],
         NRectType::LineTo(level_from, level_to, line_type) => {
-            //
-            dbg!(r);
-            // vec![Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Lime)))
-            // vec![Rect(from_rect.0, from_rect.1, 10.0, 10.0, NoStroke, Fillstyle(Lime)))
-
-            // match line_type {
-            //     // HeadLineType::Line => {
-            //     //     vec![Line(from_rect.0, from_rect.1, r.0, r.1, Strokestyle(4.0, Black)))
-            //     // }
-            //     // HeadLineType::Glissando => {}
-            //     // HeadLineType::GlissandoWave => {}
-            //     HeadLineType::Halfstep => {
-            //         let width = r.0 - from_rect.0;
-            //         let midx = width / 2.0;
-            //         let height = r.1 - from_rect.1;
-            //         let midy = (height / 2.0) + 15.0;
-            //         let mut p = PathSegments([M(from_rect.0, from_rect.1), L(from_rect.0 + midx, from_rect.1 + midy), L(r.0, r.1)].to_vec());
-            //         let mut p1 = PathSegments(OPENSANS_REGULAR_189.to_vec()).scale_path(0.05, 0.05).move_path(from_rect.0 + midx - 15.0, r.1);
-            //         vec![
-            //             Path(p, Strokestyle(4.0, Red), NoFill, PathCacheInfo::NoCache),
-            //             Path(p1, NoStroke, Fillstyle(Black), PathCacheInfo::NoCache),
-            //         ]
-            //     }
-            //     HeadLineType::Wholestep => {
-            //         let width = r.0 - from_rect.0;
-            //         let midx = width / 2.0;
-            //         let height = 15.0;
-            //         let mut p = PathSegments([M(from_rect.0, from_rect.1), L(from_rect.0, from_rect.1 + height), L(r.0, r.1 + height), L(r.0, r.1)].to_vec());
-            //         let mut p1 = PathSegments(OPENSANS_REGULAR_49.to_vec()).scale_path(0.04, 0.04).move_path(from_rect.0 + midx - 10.0, r.1 - 2.0);
-            //         vec![
-            //             Path(p, Strokestyle(4.0, Blue), NoFill, PathCacheInfo::NoCache),
-            //             Path(p1, NoStroke, Fillstyle(Black), PathCacheInfo::NoCache),
-            //         ]
-            //     }
-            //     _ => vec![Line(from_rect.0, from_rect.1, r.0, r.1, Strokestyle(4.0, Lime))],
-            // }
-            //
             vec![]
+        }
+
+        NRectType::Function(ftype, fcolor, fbass, spar, epar) => {
+            dbg!(spar);
+            let mut v = Vec::new();
+
+            let mut spar_width = 0.0;
+            if *spar {
+                spar_width += SPACE;
+
+                let spar_path = crate::render::fonts::merriweather_regular::get_path('(').to_vec();
+                v.push(Path(
+                    PathSegments(spar_path)
+                        .scale_path(FUNCTION_FONT_SCALE, FUNCTION_FONT_SCALE)
+                        .move_path(r.0, r.1 + GLYPH_HEIGHT * FUNCTION_FONT_SCALE),
+                    NoStroke,
+                    Fillstyle(Black),
+                    PathCacheInfo::NoCache,
+                ));
+            }
+
+            let fun_path = match ftype {
+                FunctionType::T => crate::render::fonts::merriweather_regular::get_path('T').to_vec(),
+                FunctionType::D => crate::render::fonts::merriweather_regular::get_path('D').to_vec(),
+                _ => crate::render::fonts::merriweather_regular::get_path('S').to_vec(),
+            };
+
+            match ftype {
+                FunctionType::Spacer => {}
+                _ => v.push(Path(
+                    PathSegments(fun_path)
+                        .scale_path(FUNCTION_FONT_SCALE, FUNCTION_FONT_SCALE)
+                        .move_path(r.0 + spar_width, r.1 + GLYPH_HEIGHT * FUNCTION_FONT_SCALE),
+                    NoStroke,
+                    Fillstyle(Black),
+                    PathCacheInfo::NoCache,
+                )),
+            };
+
+            let col_path_upper = match fcolor {
+                FunctionColor::Fc64 | FunctionColor::Fc4 => crate::render::fonts::merriweather_regular::get_path('6').to_vec(),
+                _ => crate::render::fonts::merriweather_regular::get_path('x').to_vec(),
+            };
+
+            match fcolor {
+                FunctionColor::FcNone => {}
+                _ => v.push(Path(
+                    PathSegments(col_path_upper)
+                        .scale_path(FUNCTION_FONT_FIGURE_SCALE, FUNCTION_FONT_FIGURE_SCALE)
+                        .move_path(r.0 + spar_width + SPACE * 2.3, r.1 * FUNCTION_FONT_FIGURE_SCALE - SPACE * 0.4),
+                    NoStroke,
+                    Fillstyle(Black),
+                    PathCacheInfo::NoCache,
+                )),
+            }
+
+            let col_path_lower = match fcolor {
+                FunctionColor::Fc64 => crate::render::fonts::merriweather_regular::get_path('4').to_vec(),
+                _ => crate::render::fonts::merriweather_regular::get_path('x').to_vec(),
+            };
+
+            match fcolor {
+                FunctionColor::FcNone => {}
+                _ => v.push(Path(
+                    PathSegments(col_path_lower)
+                        .scale_path(FUNCTION_FONT_FIGURE_SCALE, FUNCTION_FONT_FIGURE_SCALE)
+                        .move_path(r.0 + spar_width + SPACE * 2.3, r.1 * FUNCTION_FONT_FIGURE_SCALE + SPACE),
+                    NoStroke,
+                    Fillstyle(Black),
+                    PathCacheInfo::NoCache,
+                )),
+            }
+
+            let bass_path = match fbass {
+                FunctionBass::Fb3 => crate::render::fonts::merriweather_regular::get_path('3').to_vec(),
+                _ => crate::render::fonts::merriweather_regular::get_path('x').to_vec(),
+            };
+
+            match fbass {
+                FunctionBass::FbNone => {}
+                _ => v.push(Path(
+                    PathSegments(bass_path)
+                        .scale_path(FUNCTION_FONT_FIGURE_SCALE, FUNCTION_FONT_FIGURE_SCALE)
+                        .move_path(r.0 + spar_width + SPACE * 0.8, r.1 * FUNCTION_FONT_FIGURE_SCALE + SPACE * 2.6),
+                    NoStroke,
+                    Fillstyle(Black),
+                    PathCacheInfo::NoCache,
+                )),
+            }
+
+            if *epar {
+                let end_path = crate::render::fonts::merriweather_regular::get_path(')').to_vec();
+                v.push(Path(
+                    PathSegments(end_path)
+                        .scale_path(FUNCTION_FONT_SCALE, FUNCTION_FONT_SCALE)
+                        .move_path(r.0 + spar_width + SPACE * 3.3, r.1 + GLYPH_HEIGHT * FUNCTION_FONT_SCALE),
+                    NoStroke,
+                    Fillstyle(Black),
+                    PathCacheInfo::NoCache,
+                ));
+            }
+
+            v
         }
     }
 }
