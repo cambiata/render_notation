@@ -129,7 +129,7 @@ pub fn do_sub_beams(beam_width: f32, beam_height: f32, tip_coords: &Vec<(f32, f3
     };
 
     graphic_items.push(Path(
-        PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight)]),
+        PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight), L(x, y)]),
         Stroke::NoStroke,
         Fillstyle(Black),
         PathCacheInfo::NoCache,
@@ -147,7 +147,7 @@ pub fn do_sub_beams(beam_width: f32, beam_height: f32, tip_coords: &Vec<(f32, f3
             };
 
             graphic_items.push(Path(
-                PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight)]),
+                PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight), L(x, y)]),
                 Stroke::NoStroke,
                 Fillstyle(Black),
                 PathCacheInfo::NoCache,
@@ -187,7 +187,7 @@ pub fn do_sub_sixteen_rightside(left: (f32, f32), right: (f32, f32), direction: 
     };
 
     graphic_items.push(Path(
-        PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight)]),
+        PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight), L(x, y)]),
         Stroke::NoStroke,
         Fillstyle(Black),
         PathCacheInfo::NoCache,
@@ -207,7 +207,7 @@ pub fn do_sub_sixteen(left: (f32, f32), right: (f32, f32), direction: DirUD) -> 
     };
 
     graphic_items.push(Path(
-        PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight)]),
+        PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight), L(x, y)]),
         Stroke::NoStroke,
         Fillstyle(Black),
         PathCacheInfo::NoCache,
@@ -232,7 +232,7 @@ pub fn do_sub_sixteen_leftside(left: (f32, f32), right: (f32, f32), direction: D
     };
 
     graphic_items.push(Path(
-        PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight)]),
+        PathSegments(vec![M(x, y), L(x2, y2), L(x2, y2 + beamheight), L(x, y + beamheight), L(x, y)]),
         Stroke::NoStroke,
         Fillstyle(Black),
         PathCacheInfo::NoCache,
