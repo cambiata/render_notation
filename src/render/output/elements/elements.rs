@@ -286,6 +286,56 @@ pub fn output_ties(matrix: &RMatrix) -> GraphicItems {
     graphic_items
 }
 
+pub fn output_ackolades(matrix: &RMatrix) -> GraphicItems {
+    let mut graphic_items = GraphicItems::new();
+
+    let mut first_y: Option<f32> = None;
+    let mut last_y: Option<f32> = None;
+
+    if let Some(bartemplate) = &matrix.bartemplate {
+        for (rowidx, row) in matrix.rows.iter().enumerate() {
+            let template = bartemplate.0[rowidx];
+            match template {
+                PartTemplate::Music => {
+                    let row = row.borrow();
+                    if first_y.is_none() {
+                        first_y = Some(row.y);
+                    } else {
+                        last_y = Some(row.y);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    if first_y.is_some() && last_y.is_some() {
+        let y1 = first_y.unwrap() - SPACE * 2.0;
+        let y2 = last_y.unwrap() + SPACE * 2.0;
+        graphic_items.push(Line(0., y1, 0., y2, Strokestyle(NOTELINES_WIDTH, Black)));
+
+        let y1 = y1 - 5.0;
+        let y2 = y2 + 5.0;
+        graphic_items.push(Rect(-SPACE, y1, SPACE * 0.5, y2 - y1, NoStroke, Fillstyle(Black)));
+
+        graphic_items.push(Path(
+            PathSegments(vec![M(-SPACE, y1), L(0., y1 - 10.0), L(0., y1 - 8.0), L(-SPACE_HALF, y1)]),
+            NoStroke,
+            Fillstyle(Black),
+            PathCacheInfo::NoCache,
+        ));
+
+        graphic_items.push(Path(
+            PathSegments(vec![M(-SPACE, y2), L(0., y2 + 10.0), L(0., y2 + 8.0), L(-SPACE_HALF, y2)]),
+            NoStroke,
+            Fillstyle(Black),
+            PathCacheInfo::NoCache,
+        ));
+    }
+
+    graphic_items
+}
+
 pub fn output_notelines(matrix: &RMatrix) -> GraphicItems {
     let mut graphic_items = GraphicItems::new();
     if let Some(bartemplate) = &matrix.bartemplate {
@@ -303,7 +353,6 @@ pub fn output_notelines(matrix: &RMatrix) -> GraphicItems {
             }
         }
     }
-
     graphic_items
 }
 

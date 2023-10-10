@@ -7,6 +7,8 @@ use std::collections::BTreeMap;
 
 pub fn matrix_to_svg(matrix: &RMatrix, draw_dev_frames: bool, options: Option<BuilderOptions>) -> String {
     let mut graphic_items = GraphicItems::new();
+
+    graphic_items.extend(output_ackolades(matrix));
     graphic_items.extend(output_notelines(matrix));
     graphic_items.extend(output_main_elements(matrix, draw_dev_frames));
     graphic_items.extend(output_beamgroups(matrix));
