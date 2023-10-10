@@ -18,14 +18,30 @@ pub fn matrix_to_svg(matrix: &RMatrix, draw_dev_frames: bool, options: Option<Bu
     svg
 }
 
-pub fn matrix_to_fuse(matrix: &RMatrix, draw_dev_frames: bool, options: Option<BuilderOptions>) -> String {
+pub fn matrix_to_fuse(matrix: &RMatrix, draw_dev_frames: bool, options: Option<BuilderOptions>, fuse_name: &str, fuse_category: &str) -> String {
     let mut graphic_items = GraphicItems::new();
     graphic_items.extend(output_notelines(matrix));
     graphic_items.extend(output_main_elements(matrix, draw_dev_frames));
     graphic_items.extend(output_beamgroups(matrix));
     graphic_items.extend(output_ties(matrix));
     graphic_items.extend(output_lines(matrix));
-    let fuse = FuseBuilder::new().build(graphic_items, options).unwrap();
+
+    let scale = match options {
+        Some(options) => options.size_scaling,
+        None => 1.0,
+    };
+
+    graphic_items = graphic_items.scale_items(scale, -scale, scale);
+
+    let items_bbox = &graphic_items.bbox();
+
+    let fuse_width = items_bbox.2 + (-items_bbox.0);
+    let fuse_height = items_bbox.3 + (-items_bbox.1);
+    dbg!(fuse_width, fuse_height);
+
+    let mut fuse = FuseBuilder::new().build(graphic_items, options).unwrap();
+    let mut fuse = fuse.replace("@FUSE_NAME@", fuse_name);
+    let mut fuse = fuse.replace("@FUSE_CATEGORY@", fuse_category);
 
     fuse
 }

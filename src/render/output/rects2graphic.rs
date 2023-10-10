@@ -307,11 +307,12 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
         }
         NRectType::Dev(ellipse, color) => {
             let color = Color::from_str(color);
-            if *ellipse {
-                vec![Ellipse(r.0, r.1, r.2, r.3, Strokestyle(1.0, color), NoFill)]
-            } else {
-                vec![Rect(r.0, r.1, r.2, r.3, Strokestyle(1.0, color), NoFill)]
-            }
+            // if *ellipse {
+            //     vec![Ellipse(r.0, r.1, r.2, r.3, Strokestyle(1.0, color), NoFill)]
+            // } else {
+            //     vec![Rect(r.0, r.1, r.2, r.3, Strokestyle(1.0, color), NoFill)]
+            // }
+            vec![]
         }
 
         NRectType::DUMMY => vec![],
@@ -322,11 +323,350 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             vec![]
         }
 
-        NRectType::Function(ftype, fcolor, fbass, spar, epar) => {
+        NRectType::ChordSymbol(chord_root, chord_flavour, chord_color, chord_bass) => {
+            let mut v = Vec::new();
+
+            let mut root_x = 0.0;
+            let mut root_acc_x = 0.0;
+            let mut flavour_x = 0.0;
+            let mut color_acc_x = 0.0;
+            let mut color_x = 0.0;
+            let mut bass_slash_x = 0.0;
+            let mut bass_x = 0.0;
+            let mut bass_acc_x = 0.0;
+            let mut width = 0.0;
+            let mut x = CHORD_MARGIN * 0.5;
+
+            // Root
+            root_x = width;
+            root_acc_x = width;
+            match chord_root {
+                ChordRoot::None => {}
+                _ => {
+                    let root_char = chord_root.get_char();
+                    match root_char {
+                        'G' | 'D' => width = width + 60.0,
+                        'A' | 'B' => width = width + 55.0,
+                        _ => width = width + 50.0,
+                    }
+                    root_acc_x += width;
+
+                    // Root sign
+                    match chord_root {
+                        ChordRoot::CFlat | ChordRoot::DFlat | ChordRoot::EFlat | ChordRoot::FFlat | ChordRoot::GFlat | ChordRoot::AFlat | ChordRoot::BFlat => {
+                            width = width + 30.0;
+                        }
+                        ChordRoot::CSharp | ChordRoot::DSharp | ChordRoot::ESharp | ChordRoot::FSharp | ChordRoot::GSharp | ChordRoot::ASharp | ChordRoot::BSharp => {
+                            width = width + 30.0;
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            // Flavour Major/Minor
+            flavour_x = width;
+            match chord_flavour {
+                ChordFlavour::Minor => {
+                    width = width + 80.0;
+                }
+                _ => {}
+            }
+
+            // Colour sign
+            color_acc_x = width;
+            color_x = width;
+
+            match chord_color {
+                ChordColor::None => {}
+                _ => {
+                    match chord_color {
+                        ChordColor::PlusFive => {
+                            width = width + 15.0;
+                        }
+                        ChordColor::MinusNine => {
+                            width = width + 15.0;
+                        }
+                        ChordColor::SusTwo | ChordColor::SusFour | ChordColor::MajSeven => {
+                            width = width + 22.0;
+                            // color_acc_x = width;
+                            width = width + 28.0;
+                            // color_acc_x = width;
+                            width = width + 25.0;
+                            // color_acc_x = width;
+                        }
+                        _ => {}
+                    }
+                    color_x = width;
+
+                    // Colour figure
+                    match chord_color {
+                        ChordColor::SusTwo
+                        | ChordColor::SusFour
+                        | ChordColor::Five
+                        | ChordColor::PlusFive
+                        | ChordColor::Six
+                        | ChordColor::Seven
+                        | ChordColor::MajSeven
+                        | ChordColor::MinusNine
+                        | ChordColor::Nine
+                        | ChordColor::PlusNine => {
+                            width = width + 25.0;
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            // Bass slash
+            match chord_bass {
+                ChordRoot::None => {}
+                _ => {
+                    bass_slash_x = width;
+                    width = width + 28.0;
+                    // slash
+                    bass_x = width;
+                    // bass root
+                    let root_char = chord_bass.get_char();
+                    match root_char {
+                        'G' | 'D' => width = width + 60.0,
+                        'A' | 'B' => width = width + 55.0,
+                        _ => width = width + 52.0,
+                    }
+
+                    // bass sign
+                    bass_acc_x = width;
+                    width += 25.0;
+                }
+            }
+
+            //-------------------------------------------------------------------
+            // Root
+            match chord_root {
+                ChordRoot::None => {}
+                _ => {
+                    let root_char = chord_root.get_char();
+                    let path = crate::render::fonts::merriweather_regular::get_path(root_char).to_vec();
+                    v.push(Path(
+                        PathSegments(path)
+                            .scale_path(CHORD_FONT_SCALE, CHORD_FONT_SCALE)
+                            .move_path(r.0 + x + root_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_SCALE),
+                        NoStroke,
+                        Fillstyle(Black),
+                        PathCacheInfo::NoCache,
+                    ));
+
+                    // Root sign
+                    match chord_root {
+                        ChordRoot::CFlat | ChordRoot::DFlat | ChordRoot::EFlat | ChordRoot::FFlat | ChordRoot::GFlat | ChordRoot::AFlat | ChordRoot::BFlat => {
+                            let path = CADENZA_ACCIDENTAL_FLAT.to_vec();
+                            let acc = PathSegments(CADENZA_ACCIDENTAL_FLAT.to_vec())
+                                .scale_path(CHORD_FONT_SCALE, -CHORD_FONT_SCALE)
+                                .move_path(r.0 + x + root_acc_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_SCALE - SPACE * 1.3);
+                            v.push(Path(acc, NoStroke, Fillstyle(Black), PathCacheInfo::NoCache));
+                        }
+                        ChordRoot::CSharp | ChordRoot::DSharp | ChordRoot::ESharp | ChordRoot::FSharp | ChordRoot::GSharp | ChordRoot::ASharp | ChordRoot::BSharp => {
+                            let path = CADENZA_ACCIDENTAL_SHARP.to_vec();
+                            let acc = PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec())
+                                .scale_path(CHORD_FONT_SCALE * 0.9, -CHORD_FONT_SCALE * 0.9)
+                                .move_path(r.0 + x + root_acc_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_SCALE - SPACE * 1.6);
+                            v.push(Path(acc, NoStroke, Fillstyle(Black), PathCacheInfo::NoCache));
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            match chord_flavour {
+                ChordFlavour::Minor => {
+                    let path = crate::render::fonts::merriweather_regular::get_path('m').to_vec();
+                    v.push(Path(
+                        PathSegments(path)
+                            .scale_path(CHORD_FONT_SCALE, CHORD_FONT_SCALE)
+                            .move_path(r.0 + x + flavour_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_SCALE),
+                        NoStroke,
+                        Fillstyle(Black),
+                        PathCacheInfo::NoCache,
+                    ));
+                }
+                _ => {}
+            }
+
+            match chord_color {
+                ChordColor::None => {}
+                _ => {
+                    match chord_color {
+                        ChordColor::PlusFive => {
+                            let acc = PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec())
+                                .scale_path(CHORD_FONT_ACCIDENTAL_SCALE, -CHORD_FONT_ACCIDENTAL_SCALE)
+                                .move_path(r.0 + x + color_acc_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_ACCIDENTAL_SCALE - SPACE * 0.7);
+                            v.push(Path(acc, NoStroke, Fillstyle(Black), PathCacheInfo::NoCache));
+                        }
+                        ChordColor::MinusNine => {
+                            let acc = PathSegments(CADENZA_ACCIDENTAL_FLAT.to_vec())
+                                .scale_path(CHORD_FONT_ACCIDENTAL_SCALE, -CHORD_FONT_ACCIDENTAL_SCALE)
+                                .move_path(r.0 + x + color_acc_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_ACCIDENTAL_SCALE - SPACE * 0.7);
+                            v.push(Path(acc, NoStroke, Fillstyle(Black), PathCacheInfo::NoCache));
+                        }
+                        ChordColor::SusTwo | ChordColor::SusFour => {
+                            let path = crate::render::fonts::merriweather_regular::get_path('s').to_vec();
+                            v.push(Path(
+                                PathSegments(path)
+                                    .scale_path(CHORD_FONT_FIGURE_SCALE, CHORD_FONT_FIGURE_SCALE)
+                                    .move_path(r.0 + x + color_acc_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_FIGURE_SCALE - SPACE * 0.3),
+                                NoStroke,
+                                Fillstyle(Black),
+                                PathCacheInfo::NoCache,
+                            ));
+                            let path = crate::render::fonts::merriweather_regular::get_path('u').to_vec();
+                            v.push(Path(
+                                PathSegments(path)
+                                    .scale_path(CHORD_FONT_FIGURE_SCALE, CHORD_FONT_FIGURE_SCALE)
+                                    .move_path(r.0 + x + color_acc_x + 22.0, r.1 + GLYPH_HEIGHT * CHORD_FONT_FIGURE_SCALE - SPACE * 0.3),
+                                NoStroke,
+                                Fillstyle(Black),
+                                PathCacheInfo::NoCache,
+                            ));
+                            let path = crate::render::fonts::merriweather_regular::get_path('s').to_vec();
+                            v.push(Path(
+                                PathSegments(path)
+                                    .scale_path(CHORD_FONT_FIGURE_SCALE, CHORD_FONT_FIGURE_SCALE)
+                                    .move_path(r.0 + x + color_acc_x + 49.0, r.1 + GLYPH_HEIGHT * CHORD_FONT_FIGURE_SCALE - SPACE * 0.3),
+                                NoStroke,
+                                Fillstyle(Black),
+                                PathCacheInfo::NoCache,
+                            ));
+                        }
+                        ChordColor::MajSeven => {
+                            let path = crate::render::fonts::merriweather_regular::get_path('m').to_vec();
+                            v.push(Path(
+                                PathSegments(path)
+                                    .scale_path(CHORD_FONT_FIGURE_SCALE, CHORD_FONT_FIGURE_SCALE)
+                                    .move_path(r.0 + x + color_acc_x - 5.0, r.1 + GLYPH_HEIGHT * CHORD_FONT_FIGURE_SCALE - SPACE * 0.3),
+                                NoStroke,
+                                Fillstyle(Black),
+                                PathCacheInfo::NoCache,
+                            ));
+                            let path = crate::render::fonts::merriweather_regular::get_path('a').to_vec();
+                            v.push(Path(
+                                PathSegments(path)
+                                    .scale_path(CHORD_FONT_FIGURE_SCALE, CHORD_FONT_FIGURE_SCALE)
+                                    .move_path(r.0 + x + color_acc_x + 40.0, r.1 + GLYPH_HEIGHT * CHORD_FONT_FIGURE_SCALE - SPACE * 0.3),
+                                NoStroke,
+                                Fillstyle(Black),
+                                PathCacheInfo::NoCache,
+                            ));
+                            let path = crate::render::fonts::merriweather_regular::get_path('j').to_vec();
+                            v.push(Path(
+                                PathSegments(path)
+                                    .scale_path(CHORD_FONT_FIGURE_SCALE, CHORD_FONT_FIGURE_SCALE)
+                                    .move_path(r.0 + x + color_acc_x + 65.0, r.1 + GLYPH_HEIGHT * CHORD_FONT_FIGURE_SCALE - SPACE * 0.3),
+                                NoStroke,
+                                Fillstyle(Black),
+                                PathCacheInfo::NoCache,
+                            ));
+                        }
+                        _ => {}
+                    }
+
+                    // Colour figure
+                    match chord_color {
+                        ChordColor::SusTwo
+                        | ChordColor::SusFour
+                        | ChordColor::Five
+                        | ChordColor::PlusFive
+                        | ChordColor::Six
+                        | ChordColor::Seven
+                        | ChordColor::MajSeven
+                        | ChordColor::MinusNine
+                        | ChordColor::Nine
+                        | ChordColor::PlusNine => {
+                            let figure = match chord_color {
+                                ChordColor::SusTwo => '2',
+                                ChordColor::SusFour => '4',
+                                ChordColor::Five => '5',
+                                ChordColor::PlusFive => '5',
+                                ChordColor::Six => '6',
+                                ChordColor::MinusNine => '9',
+                                ChordColor::Nine => '9',
+                                ChordColor::PlusNine => '9',
+                                ChordColor::Seven => '7',
+                                ChordColor::MajSeven => '7',
+                                _ => ' ',
+                            };
+                            let path = crate::render::fonts::merriweather_regular::get_path(figure).to_vec();
+                            v.push(Path(
+                                PathSegments(path)
+                                    .scale_path(CHORD_FONT_FIGURE_SCALE, CHORD_FONT_FIGURE_SCALE)
+                                    .move_path(r.0 + x + color_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_FIGURE_SCALE - SPACE * 0.4),
+                                NoStroke,
+                                Fillstyle(Black),
+                                PathCacheInfo::NoCache,
+                            ));
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            // Bass slash
+            match chord_bass {
+                ChordRoot::None => {}
+                _ => {
+                    // slash
+                    v.push(Line(
+                        r.0 + x + bass_slash_x + SPACE,
+                        r.1 + GLYPH_HEIGHT * CHORD_FONT_FIGURE_SCALE - SPACE * 2.0,
+                        r.0 + x + bass_slash_x,
+                        r.1 + GLYPH_HEIGHT * CHORD_FONT_FIGURE_SCALE + SPACE * 1.3,
+                        Strokestyle(5.0, Color::Black),
+                    ));
+                    // bass root
+                    let root_char = chord_bass.get_char();
+                    let path = crate::render::fonts::merriweather_regular::get_path(root_char).to_vec();
+                    v.push(Path(
+                        PathSegments(path)
+                            .scale_path(CHORD_FONT_SCALE, CHORD_FONT_SCALE)
+                            .move_path(r.0 + x + bass_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_SCALE),
+                        NoStroke,
+                        Fillstyle(Black),
+                        PathCacheInfo::NoCache,
+                    ));
+
+                    // bass sign
+                    match chord_bass {
+                        ChordRoot::CFlat | ChordRoot::DFlat | ChordRoot::EFlat | ChordRoot::FFlat | ChordRoot::GFlat | ChordRoot::AFlat | ChordRoot::BFlat => {
+                            let path = CADENZA_ACCIDENTAL_FLAT.to_vec();
+                            let acc = PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec())
+                                .scale_path(CHORD_FONT_SCALE, -CHORD_FONT_SCALE)
+                                .move_path(r.0 + x + bass_acc_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_SCALE - SPACE * 1.3);
+                            v.push(Path(acc, NoStroke, Fillstyle(Black), PathCacheInfo::NoCache));
+                        }
+                        ChordRoot::CSharp | ChordRoot::DSharp | ChordRoot::ESharp | ChordRoot::FSharp | ChordRoot::GSharp | ChordRoot::ASharp | ChordRoot::BSharp => {
+                            let path = CADENZA_ACCIDENTAL_SHARP.to_vec();
+                            let acc = PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec())
+                                .scale_path(CHORD_FONT_SCALE * 0.9, -CHORD_FONT_SCALE * 0.9)
+                                .move_path(r.0 + x + bass_acc_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_SCALE - SPACE * 1.6);
+                            v.push(Path(acc, NoStroke, Fillstyle(Black), PathCacheInfo::NoCache));
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            //---------------------------------
+            // bounding rect
+            // v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Orange), NoFill));
+
+            v
+        }
+
+        NRectType::FunctionSymbol(ftype, fcolor, fbass, spar, epar) => {
             dbg!(spar);
             let mut v = Vec::new();
 
             let mut spar_width = 0.0;
+
             if *spar {
                 spar_width += SPACE;
 
