@@ -684,6 +684,20 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             let fun_path = match ftype {
                 FunctionType::T => crate::render::fonts::merriweather_regular::get_path('T').to_vec(),
                 FunctionType::D => crate::render::fonts::merriweather_regular::get_path('D').to_vec(),
+                FunctionType::S => crate::render::fonts::merriweather_regular::get_path('S').to_vec(),
+                FunctionType::Sp => {
+                    let mut p1 = PathSegments(crate::render::fonts::merriweather_regular::get_path('S').to_vec());
+                    let mut p2 = PathSegments(crate::render::fonts::merriweather_regular::get_path('p').to_vec()).move_path(430.0, 0.0);
+                    p1.extend(&p2);
+                    p1.0
+                }
+                FunctionType::DD => {
+                    let mut p1 = PathSegments(crate::render::fonts::merriweather_regular::get_path('D').to_vec());
+                    let mut p2 = PathSegments(crate::render::fonts::merriweather_regular::get_path('D').to_vec()).move_path(200.0, -120.0);
+                    p1.extend(&p2);
+                    p1.0
+                }
+
                 _ => crate::render::fonts::merriweather_regular::get_path('S').to_vec(),
             };
 
@@ -700,37 +714,51 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             };
 
             let col_path_upper = match fcolor {
-                FunctionColor::Fc64 | FunctionColor::Fc4 => crate::render::fonts::merriweather_regular::get_path('6').to_vec(),
-                _ => crate::render::fonts::merriweather_regular::get_path('x').to_vec(),
+                FunctionColor::Fc64 | FunctionColor::Fc6 => Some(crate::render::fonts::merriweather_regular::get_path('6').to_vec()),
+                FunctionColor::Fc7 => Some(crate::render::fonts::merriweather_regular::get_path('7').to_vec()),
+                _ => None,
             };
+
+            match ftype {
+                FunctionType::DD => spar_width += 20.0,
+                _ => {}
+            }
 
             match fcolor {
                 FunctionColor::FcNone => {}
-                _ => v.push(Path(
-                    PathSegments(col_path_upper)
-                        .scale_path(FUNCTION_FONT_FIGURE_SCALE, FUNCTION_FONT_FIGURE_SCALE)
-                        .move_path(r.0 + spar_width + SPACE * 2.3, r.1 * FUNCTION_FONT_FIGURE_SCALE - SPACE * 0.4),
-                    NoStroke,
-                    Fillstyle(Black),
-                    PathCacheInfo::NoCache,
-                )),
+                _ => {
+                    if col_path_upper.is_some() {
+                        v.push(Path(
+                            PathSegments(col_path_upper.unwrap())
+                                .scale_path(FUNCTION_FONT_FIGURE_SCALE, FUNCTION_FONT_FIGURE_SCALE)
+                                .move_path(r.0 + spar_width + SPACE * 2.3, r.1 + GLYPH_HEIGHT * FUNCTION_FONT_FIGURE_SCALE - SPACE * 0.4),
+                            NoStroke,
+                            Fillstyle(Black),
+                            PathCacheInfo::NoCache,
+                        ))
+                    }
+                }
             }
 
             let col_path_lower = match fcolor {
-                FunctionColor::Fc64 => crate::render::fonts::merriweather_regular::get_path('4').to_vec(),
-                _ => crate::render::fonts::merriweather_regular::get_path('x').to_vec(),
+                FunctionColor::Fc64 => Some(crate::render::fonts::merriweather_regular::get_path('4').to_vec()),
+                _ => None,
             };
 
             match fcolor {
                 FunctionColor::FcNone => {}
-                _ => v.push(Path(
-                    PathSegments(col_path_lower)
-                        .scale_path(FUNCTION_FONT_FIGURE_SCALE, FUNCTION_FONT_FIGURE_SCALE)
-                        .move_path(r.0 + spar_width + SPACE * 2.3, r.1 * FUNCTION_FONT_FIGURE_SCALE + SPACE),
-                    NoStroke,
-                    Fillstyle(Black),
-                    PathCacheInfo::NoCache,
-                )),
+                _ => {
+                    if col_path_lower.is_some() {
+                        v.push(Path(
+                            PathSegments(col_path_lower.unwrap())
+                                .scale_path(FUNCTION_FONT_FIGURE_SCALE, FUNCTION_FONT_FIGURE_SCALE)
+                                .move_path(r.0 + spar_width + SPACE * 2.3, r.1 + GLYPH_HEIGHT * FUNCTION_FONT_FIGURE_SCALE + SPACE),
+                            NoStroke,
+                            Fillstyle(Black),
+                            PathCacheInfo::NoCache,
+                        ))
+                    }
+                }
             }
 
             let bass_path = match fbass {
@@ -761,6 +789,8 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                     PathCacheInfo::NoCache,
                 ));
             }
+
+            v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Orange), NoFill));
 
             v
         }
