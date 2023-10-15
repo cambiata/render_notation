@@ -637,7 +637,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                     match chord_bass {
                         ChordRoot::CFlat | ChordRoot::DFlat | ChordRoot::EFlat | ChordRoot::FFlat | ChordRoot::GFlat | ChordRoot::AFlat | ChordRoot::BFlat => {
                             let path = CADENZA_ACCIDENTAL_FLAT.to_vec();
-                            let acc = PathSegments(CADENZA_ACCIDENTAL_SHARP.to_vec())
+                            let acc = PathSegments(CADENZA_ACCIDENTAL_FLAT.to_vec())
                                 .scale_path(CHORD_FONT_SCALE, -CHORD_FONT_SCALE)
                                 .move_path(r.0 + x + bass_acc_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_SCALE - SPACE * 1.3);
                             v.push(Path(acc, NoStroke, Fillstyle(Black), PathCacheInfo::NoCache));
@@ -716,10 +716,14 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             let col_path_upper = match fcolor {
                 FunctionColor::Fc64 | FunctionColor::Fc6 => Some(crate::render::fonts::merriweather_regular::get_path('6').to_vec()),
                 FunctionColor::Fc7 => Some(crate::render::fonts::merriweather_regular::get_path('7').to_vec()),
+                FunctionColor::Fc5 | FunctionColor::Fc53 => Some(crate::render::fonts::merriweather_regular::get_path('5').to_vec()),
+                FunctionColor::Fc4 => Some(crate::render::fonts::merriweather_regular::get_path('4').to_vec()),
+                FunctionColor::Fc3 => Some(crate::render::fonts::merriweather_regular::get_path('3').to_vec()),
                 _ => None,
             };
 
             match ftype {
+                FunctionType::Spacer => spar_width -= 1.4 * SPACE,
                 FunctionType::DD => spar_width += 20.0,
                 _ => {}
             }
@@ -741,7 +745,14 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             }
 
             let col_path_lower = match fcolor {
-                FunctionColor::Fc64 => Some(crate::render::fonts::merriweather_regular::get_path('4').to_vec()),
+                FunctionColor::Fc64 => {
+                    dbg!(fcolor);
+                    Some(crate::render::fonts::merriweather_regular::get_path('4').to_vec())
+                }
+                FunctionColor::Fc53 => {
+                    dbg!(fcolor);
+                    Some(crate::render::fonts::merriweather_regular::get_path('3').to_vec())
+                }
                 _ => None,
             };
 
@@ -790,8 +801,14 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                 ));
             }
 
-            v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Orange), NoFill));
+            // v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Orange), NoFill));
 
+            v
+        }
+
+        NRectType::Symbol(size) => {
+            let mut v = Vec::new();
+            v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Black), NoFill));
             v
         }
     }
