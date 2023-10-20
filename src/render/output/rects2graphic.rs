@@ -345,9 +345,9 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                 _ => {
                     let root_char = chord_root.get_char();
                     match root_char {
-                        'G' | 'D' => width = width + 60.0,
-                        'A' | 'B' => width = width + 55.0,
-                        _ => width = width + 50.0,
+                        'G' | 'D' => width = width + 50.0,
+                        'A' | 'B' => width = width + 45.0,
+                        _ => width = width + 40.0,
                     }
                     root_acc_x += width;
 
@@ -368,7 +368,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             flavour_x = width;
             match chord_flavour {
                 ChordFlavour::Minor => {
-                    width = width + 80.0;
+                    width = width + 60.0;
                 }
                 _ => {}
             }
@@ -655,7 +655,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             }
 
             //---------------------------------
-            // bounding rect
+            // chords bounding rect
             // v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Orange), NoFill));
 
             v
@@ -665,7 +665,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             dbg!(spar);
             let mut v = Vec::new();
 
-            let mut spar_width = 0.0;
+            let mut spar_width = 10.0;
 
             if *spar {
                 spar_width += SPACE;
@@ -693,7 +693,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                 }
                 FunctionType::DD => {
                     let mut p1 = PathSegments(crate::render::fonts::merriweather_regular::get_path('D').to_vec());
-                    let mut p2 = PathSegments(crate::render::fonts::merriweather_regular::get_path('D').to_vec()).move_path(200.0, -120.0);
+                    let mut p2 = PathSegments(crate::render::fonts::merriweather_regular::get_path('D').to_vec()).move_path(200.0, 120.0);
                     p1.extend(&p2);
                     p1.0
                 }
@@ -723,8 +723,8 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             };
 
             match ftype {
-                FunctionType::Spacer => spar_width -= 1.4 * SPACE,
-                FunctionType::DD => spar_width += 20.0,
+                FunctionType::Spacer => spar_width -= 1.2 * SPACE,
+                FunctionType::DD => spar_width += 15.0,
                 _ => {}
             }
 
@@ -735,7 +735,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                         v.push(Path(
                             PathSegments(col_path_upper.unwrap())
                                 .scale_path(FUNCTION_FONT_FIGURE_SCALE, FUNCTION_FONT_FIGURE_SCALE)
-                                .move_path(r.0 + spar_width + SPACE * 2.3, r.1 + GLYPH_HEIGHT * FUNCTION_FONT_FIGURE_SCALE - SPACE * 0.4),
+                                .move_path(r.0 + spar_width + SPACE * 1.9, r.1 + GLYPH_HEIGHT * FUNCTION_FONT_FIGURE_SCALE - SPACE * 0.2),
                             NoStroke,
                             Fillstyle(Black),
                             PathCacheInfo::NoCache,
@@ -763,7 +763,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                         v.push(Path(
                             PathSegments(col_path_lower.unwrap())
                                 .scale_path(FUNCTION_FONT_FIGURE_SCALE, FUNCTION_FONT_FIGURE_SCALE)
-                                .move_path(r.0 + spar_width + SPACE * 2.3, r.1 + GLYPH_HEIGHT * FUNCTION_FONT_FIGURE_SCALE + SPACE),
+                                .move_path(r.0 + spar_width + SPACE * 1.9, r.1 + GLYPH_HEIGHT * FUNCTION_FONT_FIGURE_SCALE + SPACE * 0.9),
                             NoStroke,
                             Fillstyle(Black),
                             PathCacheInfo::NoCache,
@@ -801,6 +801,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                 ));
             }
 
+            // orange rect for functions
             // v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Orange), NoFill));
 
             v
