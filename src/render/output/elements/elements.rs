@@ -156,10 +156,10 @@ pub fn output_ties(matrix: &RMatrix) -> GraphicItems {
                     for tie_from in ties_from {
                         let tie: Ref<NRectExt> = tie_from.borrow();
                         match &tie.1 {
-                            NRectType::TieFrom(note_id, level, ttype, _, _, _, _) => match ttype {
+                            NRectType::TieFrom(id1, level, ttype, _, _, _, _) => match ttype {
                                 TieFromType::Standard => {
-                                    map_rect.insert((*note_id, *level), tie_from.clone());
-                                    map_ritem.insert((*note_id, *level), item.clone());
+                                    map_rect.insert((*id1, *level), tie_from.clone());
+                                    map_ritem.insert((*id1, *level), item.clone());
                                 }
                                 TieFromType::LetRing => {
                                     println!("LetRing {}", itemidx);
@@ -184,8 +184,8 @@ pub fn output_ties(matrix: &RMatrix) -> GraphicItems {
                         let tie: Ref<NRectExt> = tie_to.borrow();
                         match &tie.1 {
                             NRectType::TieTo(ttype) => match ttype {
-                                TieToType::ResolveTieFrom(from_note_id, level) => {
-                                    let key: (usize, i8) = (*from_note_id, *level);
+                                TieToType::ResolveTieFrom(from_id1, level) => {
+                                    let key: (usize, i8) = (*from_id1, *level);
                                     let from_rect: Ref<NRectExt> =
                                         map_rect.get(&key).unwrap().borrow();
                                     let from_ritem: Ref<RItem> =
@@ -199,7 +199,7 @@ pub fn output_ties(matrix: &RMatrix) -> GraphicItems {
                                         from_placement,
                                     ) = match &from_rect.1 {
                                         NRectType::TieFrom(
-                                            note_id,
+                                            id1,
                                             level,
                                             ttype,
                                             from_duration,
@@ -475,7 +475,7 @@ pub fn output_beamgroups(matrix: &RMatrix) -> GraphicItems {
                 let item_x = item.coord_x.unwrap();
                 let item_y = item.coord_y.unwrap();
                 //------------------------------------------------------------------
-                match &item.note_beamdata {
+                match &item.notedata.beamdata1 {
                     RItemBeam::Single(ref data) => {
                         if duration_has_stem(&data.duration) {
                             graphic_items.extend(do_single(
@@ -506,7 +506,7 @@ pub fn output_beamgroups(matrix: &RMatrix) -> GraphicItems {
                     }
                     _ => {}
                 }
-                match &item.note2_beamdata {
+                match &item.notedata.beamdata2 {
                     RItemBeam::Single(data) => {
                         if duration_has_stem(&data.duration) {
                             graphic_items.extend(do_single(
