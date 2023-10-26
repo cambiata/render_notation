@@ -559,7 +559,7 @@ pub fn output_main_elements(matrix: &RMatrix, draw_dev_frames: bool) -> GraphicI
                     let nrect = nrect.borrow();
 
                     let color = "orange";
-                    let frame_rect = nrect.0.clone();
+                    let frame_rect = nrect.0;
                     let color = if col.duration == 0 { "orange" } else { "red" };
 
                     if col.duration == 0 || draw_dev_frames {
