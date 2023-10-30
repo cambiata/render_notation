@@ -227,12 +227,11 @@ pub fn output_ties(matrix: &RMatrix) -> GraphicItems {
                                     // dbg!(from_rNPoint(item.coord_x.unwrap(), item.coord_y.unwrap()));
                                     // dbg!(from_note_direction, from_tie_direction, from_placement);
 
-                                    let from_item_coords = from_ritem.coords.unwrap();
-                                    let mut from_x = from_item_coords.0 + from_rect.0 .0;
-                                    let mut from_y = from_item_coords.1 + from_rect.0 .1;
-                                    let to_item_coords = item_.coords.unwrap();
-                                    let mut to_x = to_item_coords.0 + tie.0 .0 + tie.0 .2;
-                                    let mut to_y = to_item_coords.1 + tie.0 .1;
+                                    let mut from_x = from_ritem.coord_x.unwrap() + from_rect.0 .0;
+                                    let mut from_y = from_ritem.coord_y.unwrap() + from_rect.0 .1;
+                                    // let to_item_coords = item_.coords.unwrap();
+                                    let mut to_x = item_.coord_x.unwrap() + tie.0 .0 + tie.0 .2;
+                                    let mut to_y = item_.coord_y.unwrap() + tie.0 .1;
 
                                     // vertical placement
                                     match from_placement {
@@ -479,25 +478,36 @@ pub fn output_beamgroups(matrix: &RMatrix) -> GraphicItems {
             if let Some(item) = item {
                 let item: Ref<RItem> = item.borrow();
                 // upper beams
-                let NPoint(item_x, item_y) = item
-                    .coords
-                    .expect("RItem coords should always be calculated!");
+                let item_x = item.coord_x.unwrap();
+                let item_y = item.coord_y.unwrap();
                 //------------------------------------------------------------------
                 match &item.notedata.beamdata1 {
                     RItemBeam::Single(ref data) => {
                         if duration_has_stem(&data.duration) {
-                            graphic_items.extend(do_single(data, item.coords.unwrap()));
+                            graphic_items.extend(do_single(
+                                data,
+                                NPoint(item.coord_x.unwrap(), item.coord_y.unwrap()),
+                            ));
                         }
                     }
                     RItemBeam::Start(data) => {
                         notedata = vec![];
-                        notedata.push((data.clone(), item.coords.unwrap()));
+                        notedata.push((
+                            data.clone(),
+                            NPoint(item.coord_x.unwrap(), item.coord_y.unwrap()),
+                        ));
                     }
                     RItemBeam::Middle(data) => {
-                        notedata.push((data.clone(), item.coords.unwrap()));
+                        notedata.push((
+                            data.clone(),
+                            NPoint(item.coord_x.unwrap(), item.coord_y.unwrap()),
+                        ));
                     }
                     RItemBeam::End(data) => {
-                        notedata.push((data.clone(), item.coords.unwrap()));
+                        notedata.push((
+                            data.clone(),
+                            NPoint(item.coord_x.unwrap(), item.coord_y.unwrap()),
+                        ));
                         graphic_items.extend(do_beam(&notedata));
                     }
                     _ => {}
@@ -505,18 +515,30 @@ pub fn output_beamgroups(matrix: &RMatrix) -> GraphicItems {
                 match &item.notedata.beamdata2 {
                     RItemBeam::Single(data) => {
                         if duration_has_stem(&data.duration) {
-                            graphic_items.extend(do_single(data, item.coords.unwrap()));
+                            graphic_items.extend(do_single(
+                                data,
+                                NPoint(item.coord_x.unwrap(), item.coord_y.unwrap()),
+                            ));
                         }
                     }
                     RItemBeam::Start(data) => {
                         note2data = vec![];
-                        note2data.push((data.clone(), item.coords.unwrap()));
+                        note2data.push((
+                            data.clone(),
+                            NPoint(item.coord_x.unwrap(), item.coord_y.unwrap()),
+                        ));
                     }
                     RItemBeam::Middle(data) => {
-                        note2data.push((data.clone(), item.coords.unwrap()));
+                        note2data.push((
+                            data.clone(),
+                            NPoint(item.coord_x.unwrap(), item.coord_y.unwrap()),
+                        ));
                     }
                     RItemBeam::End(data) => {
-                        note2data.push((data.clone(), item.coords.unwrap()));
+                        note2data.push((
+                            data.clone(),
+                            NPoint(item.coord_x.unwrap(), item.coord_y.unwrap()),
+                        ));
                         graphic_items.extend(do_beam(&note2data));
                     }
                     _ => {}
