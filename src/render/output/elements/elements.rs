@@ -163,10 +163,10 @@ pub fn output_ties(matrix: &RMatrix) -> GraphicItems {
                     for tie_from in ties_from {
                         let tie: Ref<NRectExt> = tie_from.borrow();
                         match &tie.1 {
-                            NRectType::TieFrom(note_id, level, ttype, _, _, _, _) => match ttype {
+                            NRectType::TieFrom(id1, level, ttype, _, _, _, _) => match ttype {
                                 TieFromType::Standard => {
-                                    map_rect.insert((*note_id, *level), tie_from.clone());
-                                    map_ritem.insert((*note_id, *level), item.clone());
+                                    map_rect.insert((*id1, *level), tie_from.clone());
+                                    map_ritem.insert((*id1, *level), item.clone());
                                 }
                                 TieFromType::LetRing => {
                                     println!("LetRing {}", itemidx);
@@ -224,21 +224,15 @@ pub fn output_ties(matrix: &RMatrix) -> GraphicItems {
                                     };
 
                                     // dbg!(from_rect.0);
-                                    // dbg!(from_ritem.coords.unwrap());
+                                    // dbg!(from_rNPoint(item.coord_x.unwrap(), item.coord_y.unwrap()));
                                     // dbg!(from_note_direction, from_tie_direction, from_placement);
 
-                                    // let from_item_coords = from_ritem.coords.unwrap();
-                                    let from_coord_x = from_ritem.coord_x.unwrap();
-                                    let from_coord_y = from_ritem.coord_y.unwrap();
-                                    let mut from_x = from_coord_x + from_rect.0 .0;
-                                    let mut from_y = from_coord_y + from_rect.0 .1;
-
-                                    // let to_item_coords = item_.coords.unwrap();
-                                    let to_coord_x = item_.coord_x.unwrap();
-                                    let to_coord_y = item_.coord_y.unwrap();
-
-                                    let mut to_x = to_coord_x + tie.0 .0 + tie.0 .2;
-                                    let mut to_y = to_coord_y + tie.0 .1;
+                                    let from_item_coords = from_ritem.coords.unwrap();
+                                    let mut from_x = from_item_coords.0 + from_rect.0 .0;
+                                    let mut from_y = from_item_coords.1 + from_rect.0 .1;
+                                    let to_item_coords = item_.coords.unwrap();
+                                    let mut to_x = to_item_coords.0 + tie.0 .0 + tie.0 .2;
+                                    let mut to_y = to_item_coords.1 + tie.0 .1;
 
                                     // vertical placement
                                     match from_placement {
@@ -485,25 +479,25 @@ pub fn output_beamgroups(matrix: &RMatrix) -> GraphicItems {
             if let Some(item) = item {
                 let item: Ref<RItem> = item.borrow();
                 // upper beams
-
-                let (item_x, item_y) = (item.coord_x.unwrap(), item.coord_y.unwrap());
-                let coords = NPoint(item_x, item_y);
+                let NPoint(item_x, item_y) = item
+                    .coords
+                    .expect("RItem coords should always be calculated!");
                 //------------------------------------------------------------------
                 match &item.notedata.beamdata1 {
                     RItemBeam::Single(ref data) => {
                         if duration_has_stem(&data.duration) {
-                            graphic_items.extend(do_single(data, coords));
+                            graphic_items.extend(do_single(data, item.coords.unwrap()));
                         }
                     }
                     RItemBeam::Start(data) => {
                         notedata = vec![];
-                        notedata.push((data.clone(), coords));
+                        notedata.push((data.clone(), item.coords.unwrap()));
                     }
                     RItemBeam::Middle(data) => {
-                        notedata.push((data.clone(), coords));
+                        notedata.push((data.clone(), item.coords.unwrap()));
                     }
                     RItemBeam::End(data) => {
-                        notedata.push((data.clone(), coords));
+                        notedata.push((data.clone(), item.coords.unwrap()));
                         graphic_items.extend(do_beam(&notedata));
                     }
                     _ => {}
@@ -511,18 +505,18 @@ pub fn output_beamgroups(matrix: &RMatrix) -> GraphicItems {
                 match &item.notedata.beamdata2 {
                     RItemBeam::Single(data) => {
                         if duration_has_stem(&data.duration) {
-                            graphic_items.extend(do_single(data, coords));
+                            graphic_items.extend(do_single(data, item.coords.unwrap()));
                         }
                     }
                     RItemBeam::Start(data) => {
                         note2data = vec![];
-                        note2data.push((data.clone(), coords));
+                        note2data.push((data.clone(), item.coords.unwrap()));
                     }
                     RItemBeam::Middle(data) => {
-                        note2data.push((data.clone(), coords));
+                        note2data.push((data.clone(), item.coords.unwrap()));
                     }
                     RItemBeam::End(data) => {
-                        note2data.push((data.clone(), coords));
+                        note2data.push((data.clone(), item.coords.unwrap()));
                         graphic_items.extend(do_beam(&note2data));
                     }
                     _ => {}
@@ -549,7 +543,7 @@ pub fn output_main_elements(matrix: &RMatrix, draw_dev_frames: bool) -> GraphicI
                     let nrect = nrect.borrow();
 
                     let color = "orange";
-                    let frame_rect = nrect.0.clone();
+                    let frame_rect = nrect.0;
                     let color = if col.duration == 0 { "orange" } else { "red" };
 
                     if col.duration == 0 || draw_dev_frames {
