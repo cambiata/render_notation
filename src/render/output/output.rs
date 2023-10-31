@@ -15,6 +15,8 @@ pub fn matrix_to_svg(matrix: &RMatrix, draw_dev_frames: bool, options: Option<Bu
     graphic_items.extend(output_ties(matrix));
     graphic_items.extend(output_lines(matrix));
 
+    graphic_items.extend(output_row_nrects(matrix));
+
     let svg = SvgBuilder::new().build(graphic_items, options).unwrap();
     // std::fs::write(svg_filename, svg).unwrap();
     svg

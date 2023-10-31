@@ -595,3 +595,16 @@ pub fn output_main_elements(matrix: &RMatrix, draw_dev_frames: bool) -> GraphicI
     }
     graphic_items
 }
+
+pub fn output_row_nrects(matrix: &RMatrix) -> GraphicItems {
+    let mut graphic_items = GraphicItems::new();
+    for (rowidx, row) in matrix.rows.iter().enumerate() {
+        let row = row.borrow();
+        for nrect in row.nrects.iter() {
+            let nrect = nrect.borrow();
+            let items = nrectext2graphic(&nrect, 0.0, row.y);
+            graphic_items.extend(GraphicItems(items));
+        }
+    }
+    graphic_items
+}

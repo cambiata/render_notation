@@ -459,6 +459,20 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             vec![] //vec![Path(PathSegments(CADENZA_3.to_vec()).inv01(), NoStroke, Fillstyle(Black)))
         }
 
+        NRectType::Dev(show, text) => {
+            if !show {
+                return vec![];
+            }
+            vec![Rect(
+                r.0,
+                r.1,
+                r.2,
+                r.3,
+                Strokestyle(5.0, Color::Red),
+                NoFill,
+            )]
+        }
+
         NRectType::ColorRect(color) => {
             let color = Color::from_str(color);
             vec![Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(color))]
@@ -495,15 +509,6 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                 Fillstyle(Black),
                 PathCacheInfo::NoCache,
             )]
-        }
-        NRectType::Dev(ellipse, color) => {
-            let color = Color::from_str(color);
-            // if *ellipse {
-            //     vec![Ellipse(r.0, r.1, r.2, r.3, Strokestyle(1.0, color), NoFill)]
-            // } else {
-            //     vec![Rect(r.0, r.1, r.2, r.3, Strokestyle(1.0, color), NoFill)]
-            // }
-            vec![]
         }
 
         NRectType::DUMMY => vec![],
@@ -1166,6 +1171,12 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
         NRectType::Symbol(size) => {
             let mut v = Vec::new();
             v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Black), NoFill));
+            v
+        }
+
+        NRectType::Barpause(duration) => {
+            let mut v = Vec::new();
+            v.push(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Orange)));
             v
         }
     }
