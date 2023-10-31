@@ -455,15 +455,15 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
 
         NRectType::WIP(msg) => {
             //
-            // println!("WIP:{}", msg);
+            println!("WIP:{}", msg);
             vec![] //vec![Path(PathSegments(CADENZA_3.to_vec()).inv01(), NoStroke, Fillstyle(Black)))
         }
 
         NRectType::Dev(show, text) => {
-            dbg!("NRectType::Dev", text);
             if !show {
                 return vec![];
             }
+            dbg!("NRectType::Dev", text);
             vec![Rect(
                 r.0,
                 r.1,
