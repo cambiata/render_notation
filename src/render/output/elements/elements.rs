@@ -586,7 +586,10 @@ pub fn output_main_elements(matrix: &RMatrix, draw_dev_frames: bool) -> GraphicI
                 let y = matrix.get_row(rowidx).unwrap().borrow().y;
                 let x = col.x;
                 let rect = NRect::new(0., 0., 10.0, 10.0);
-                let nrect = NRectExt::new(rect, NRectType::Dev(true, "gray".to_string()));
+                let nrect = NRectExt::new(
+                    rect,
+                    NRectType::Dev(false, "output_main_elements".to_string()),
+                );
                 let items = nrectext2graphic(&nrect, x, y);
                 graphic_items.extend(GraphicItems(items));
             }

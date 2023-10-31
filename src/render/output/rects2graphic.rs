@@ -460,6 +460,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
         }
 
         NRectType::Dev(show, text) => {
+            dbg!("NRectType::Dev", text);
             if !show {
                 return vec![];
             }
@@ -1174,9 +1175,13 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             v
         }
 
-        NRectType::Barpause(duration) => {
+        NRectType::Barpause(duration, draw) => {
             let mut v = Vec::new();
-            v.push(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Orange)));
+            if *draw {
+                v.push(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Black)));
+            } else {
+                // v.push(Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(Orange)));
+            }
             v
         }
     }
