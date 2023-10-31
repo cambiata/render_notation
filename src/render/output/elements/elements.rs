@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    prelude::*,
+    prelude::{rects2graphic::ncolor_to_color, *},
     render::{
         fonts::opensans_regular::{OPENSANS_REGULAR_189, OPENSANS_REGULAR_49},
         output::rects2graphic::nrectext2graphic,
@@ -104,7 +104,7 @@ pub fn output_lines(matrix: &RMatrix) -> GraphicItems {
                                 y,
                                 x2,
                                 y2,
-                                Strokestyle(5.0, ncolor2color(ncolor)),
+                                Strokestyle(5.0, ncolor_to_color(&ncolor)),
                             );
                             graphic_items.push(graphic_item);
                         }
@@ -121,22 +121,22 @@ pub fn output_lines(matrix: &RMatrix) -> GraphicItems {
     graphic_items
 }
 
-pub fn ncolor2color(ncolor: NColor) -> Color {
-    match ncolor {
-        NColor::Black => Black,
-        NColor::White => White,
-        NColor::Red => Red,
-        NColor::Blue => Blue,
-        NColor::Dodgerblue => Dodgerblue,
-        NColor::Tomato => Tomato,
-        NColor::Orange => Orange,
-        NColor::Purple => Purple,
-        NColor::Lime => Lime,
-        NColor::Gray => Gray,
-        NColor::LightGray => LightGray,
-        NColor::Green => Green,
-    }
-}
+// pub fn ncolor2color(ncolor: NColor) -> Color {
+//     match ncolor {
+//         NColor::Black => Black,
+//         NColor::White => White,
+//         NColor::Red => Red,
+//         NColor::Blue => Blue,
+//         NColor::Dodgerblue => Dodgerblue,
+//         NColor::Tomato => Tomato,
+//         NColor::Orange => Orange,
+//         NColor::Purple => Purple,
+//         NColor::Lime => Lime,
+//         NColor::Gray => Gray,
+//         NColor::LightGray => LightGray,
+//         NColor::Green => Green,
+//     }
+// }
 
 pub fn output_ties(matrix: &RMatrix) -> GraphicItems {
     // drawing of ties

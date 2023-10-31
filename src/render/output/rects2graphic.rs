@@ -14,10 +14,28 @@ pub fn nrect2graphic(n: NRect, s: Stroke, f: graphics::item::Fill) -> GraphicIte
     Rect(n.0, n.1, n.2, n.3, s, f)
 }
 
+pub fn ncolor_to_color(ncolor: &NColor) -> Color {
+    match ncolor {
+        NColor::Blue => Color::Blue,
+        NColor::Dodgerblue => Color::Dodgerblue,
+        NColor::Red => Color::Red,
+        NColor::Tomato => Color::Tomato,
+        NColor::Orange => Color::Orange,
+        NColor::Purple => Color::Purple,
+        NColor::Lime => Color::Lime,
+        NColor::Gray => Color::Gray,
+        NColor::LightGray => Color::LightGray,
+        NColor::Green => Color::Green,
+        NColor::Black => Color::Black,
+        NColor::White => Color::White,
+        NColor::RGBA(r, g, b, a) => Color::RGBA(*r, *g, *b, *a),
+    }
+}
+
 pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicItem> {
     let r = n.0.move_rect(move_x, move_y);
     match &n.1 {
-        NRectType::Head(head_type, head_shape) => {
+        NRectType::Head(head_type, head_shape, head_color) => {
             //
             let p = match head_shape {
                 HeadShape::BlackHead => CADENZA_HEAD_BLACK.to_vec(),
@@ -27,7 +45,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             vec![Path(
                 PathSegments(p).inv01().move_path(r.0, SPACE_HALF + r.1),
                 NoStroke,
-                Fillstyle(Black),
+                Fillstyle(ncolor_to_color(&head_color)),
                 PathCacheInfo::NoCache,
             )]
         }
