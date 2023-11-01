@@ -42,11 +42,19 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                 HeadShape::WhiteHead => CADENZA_HEAD_WHITE.to_vec(),
                 HeadShape::WholeHead => CADENZA_HEAD_WHOLE.to_vec(),
             };
+
+            // let cahcetag = match head_shape {
+            //     HeadShape::BlackHead => "HeadBlack".to_string(),
+            //     HeadShape::WhiteHead => "HeadWhite".to_string(),
+            //     HeadShape::WholeHead => "HeadWhole".to_string(),
+            // };
+
             vec![Path(
                 PathSegments(p).inv01().move_path(r.0, SPACE_HALF + r.1),
                 NoStroke,
                 Fillstyle(ncolor_to_color(&head_color)),
                 PathCacheInfo::NoCache,
+                // PathCacheInfo::Cache(cahcetag, r.0, SPACE_HALF + r.1),
             )]
         }
 
@@ -192,6 +200,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                 NoStroke,
                 Fillstyle(Black),
                 PathCacheInfo::NoCache,
+                // PathCacheInfo::Cache("ClefG".to_string(), r.0, r.1 + 4.6 * SPACE),
             )],
             Clef::F => vec![Path(
                 PathSegments(CADENZA_CLEF_F.to_vec())
@@ -200,6 +209,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                 NoStroke,
                 Fillstyle(Black),
                 PathCacheInfo::NoCache,
+                // PathCacheInfo::Cache("ClefF".to_string(), r.0, r.1 + SPACE),
             )],
             Clef::C => vec![Path(
                 PathSegments(CADENZA_CLEF_C.to_vec())
@@ -297,6 +307,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                                 .move_path(ACCIDENTAL_WIDTH_FLAT * 5.0, -SPACE * 0.5),
                         );
                     }
+
                     vec![Path(
                         a.move_path(r.0, r.1 + SPACE * 3.5),
                         NoStroke,
@@ -492,10 +503,26 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             )]
         }
 
+        NRectType::AttachmentPoint(show, color) => {
+            if !show {
+                return vec![];
+            }
+            dbg!("NRectType::AttachmentPoint");
+            vec![Rect(
+                r.0,
+                r.1,
+                r.2,
+                r.3,
+                NoStroke,
+                Fillstyle(ncolor_to_color(color)),
+            )]
+        }
+
         NRectType::ColorRect(color) => {
             let color = Color::from_str(color);
             vec![Rect(r.0, r.1, r.2, r.3, NoStroke, Fillstyle(color))]
         }
+
         NRectType::StrokeRect(color) => {
             let color = Color::from_str(color);
             vec![Rect(r.0, r.1, r.2, r.3, Strokestyle(1.0, color), NoFill)]
