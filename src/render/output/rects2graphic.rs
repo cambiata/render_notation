@@ -392,13 +392,23 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             match chord_root {
                 ChordRoot::None => {}
                 _ => {
-                    let root_char = chord_root.get_char();
-                    match root_char {
-                        'G' | 'D' => width = width + 50.0,
-                        'A' | 'B' => width = width + 45.0,
-                        _ => width = width + 40.0,
+                    let root_chars = chord_root.get_chars();
+
+                    for char in &root_chars {
+                        match char {
+                            'G' | 'D' => width = width + 50.0,
+                            'A' | 'B' => width = width + 45.0,
+                            'I' => width = width + 20.0,
+                            _ => width = width + 40.0,
+                        }
+                        root_acc_x += width;
                     }
-                    root_acc_x += width;
+
+                    match &root_chars.last() {
+                        &Some(&'I') => width = width + 8.0,
+                        &Some(&'V') => width = width + 8.0,
+                        _ => {}
+                    }
 
                     // Root sign
                     match chord_root {
@@ -472,20 +482,22 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                 ChordRoot::None => {}
                 _ => {
                     bass_slash_x = width;
-                    width = width + 28.0;
+                    width = width + 20.0;
                     // slash
                     bass_x = width;
                     // bass root
-                    let root_char = chord_bass.get_char();
-                    match root_char {
-                        'G' | 'D' => width = width + 60.0,
-                        'A' | 'B' => width = width + 55.0,
-                        _ => width = width + 52.0,
+                    let root_chars = chord_bass.get_chars();
+                    for char in root_chars {
+                        match char {
+                            'G' | 'D' => width = width + 50.0,
+                            'A' | 'B' => width = width + 55.0,
+                            _ => width = width + 50.0,
+                        }
                     }
 
                     // bass sign
                     bass_acc_x = width;
-                    width += 25.0;
+                    width += 20.0;
                 }
             }
 
@@ -494,16 +506,25 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             match chord_root {
                 ChordRoot::None => {}
                 _ => {
-                    let root_char = chord_root.get_char();
-                    let path = crate::render::fonts::merriweather_regular::get_path(root_char).to_vec();
-                    v.push(Path(
-                        PathSegments(path)
-                            .scale_path(CHORD_FONT_SCALE, CHORD_FONT_SCALE)
-                            .move_path(r.0 + x + root_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_SCALE),
-                        NoStroke,
-                        Fillstyle(Black),
-                        PathCacheInfo::NoCache,
-                    ));
+                    let root_chars = chord_root.get_chars();
+                    let mut char_x = 0.0;
+                    for char in root_chars {
+                        let path = crate::render::fonts::merriweather_regular::get_path(char).to_vec();
+                        v.push(Path(
+                            PathSegments(path)
+                                .scale_path(CHORD_FONT_SCALE, CHORD_FONT_SCALE)
+                                .move_path(r.0 + x + root_x + char_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_SCALE),
+                            NoStroke,
+                            Fillstyle(Black),
+                            PathCacheInfo::NoCache,
+                        ));
+                        if char == 'I' {
+                            char_x += 20.0;
+                        }
+                        if char == 'V' {
+                            char_x += 40.0;
+                        }
+                    }
 
                     // Root sign
                     match chord_root {
@@ -671,16 +692,25 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                         Strokestyle(5.0, Color::Black),
                     ));
                     // bass root
-                    let root_char = chord_bass.get_char();
-                    let path = crate::render::fonts::merriweather_regular::get_path(root_char).to_vec();
-                    v.push(Path(
-                        PathSegments(path)
-                            .scale_path(CHORD_FONT_SCALE, CHORD_FONT_SCALE)
-                            .move_path(r.0 + x + bass_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_SCALE),
-                        NoStroke,
-                        Fillstyle(Black),
-                        PathCacheInfo::NoCache,
-                    ));
+                    let root_chars = chord_bass.get_chars();
+                    let mut char_x = 0.0;
+                    for char in root_chars {
+                        let path = crate::render::fonts::merriweather_regular::get_path(char).to_vec();
+                        v.push(Path(
+                            PathSegments(path)
+                                .scale_path(CHORD_FONT_SCALE, CHORD_FONT_SCALE)
+                                .move_path(r.0 + x + bass_x + char_x, r.1 + GLYPH_HEIGHT * CHORD_FONT_SCALE),
+                            NoStroke,
+                            Fillstyle(Black),
+                            PathCacheInfo::NoCache,
+                        ));
+
+                        match char {
+                            'I' => char_x += 20.0,
+                            'V' => char_x += 40.0,
+                            _ => {}
+                        }
+                    }
 
                     // bass sign
                     match chord_bass {
@@ -705,7 +735,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
 
             //---------------------------------
             //chords bounding rect
-            // v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Orange), NoFill));
+            v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Orange), NoFill));
 
             v
         }
