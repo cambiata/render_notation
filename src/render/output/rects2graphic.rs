@@ -403,10 +403,10 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                     // Root sign
                     match chord_root {
                         ChordRoot::CFlat | ChordRoot::DFlat | ChordRoot::EFlat | ChordRoot::FFlat | ChordRoot::GFlat | ChordRoot::AFlat | ChordRoot::BFlat => {
-                            width = width + 30.0;
+                            width = width + 20.0;
                         }
                         ChordRoot::CSharp | ChordRoot::DSharp | ChordRoot::ESharp | ChordRoot::FSharp | ChordRoot::GSharp | ChordRoot::ASharp | ChordRoot::BSharp => {
-                            width = width + 30.0;
+                            width = width + 20.0;
                         }
                         _ => {}
                     }
@@ -704,7 +704,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             }
 
             //---------------------------------
-            // chords bounding rect
+            //chords bounding rect
             // v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Orange), NoFill));
 
             v
@@ -865,9 +865,42 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
             v
         }
 
-        NRectType::Symbol(size) => {
+        NRectType::Symbol(symboltype) => {
             let mut v = Vec::new();
-            v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Black), NoFill));
+            match symboltype {
+                SymbolType::ChordProgress2ndUp => {
+                    v.push(Line(r.0, r.1 + SPACE, r.0 + r.2, r.1, Strokestyle(3.0, Black)));
+                }
+                SymbolType::ChordProgress2ndDown => {
+                    v.push(Line(r.0, r.1, r.0 + r.2, r.1 + SPACE, Strokestyle(3.0, Black)));
+                }
+                SymbolType::ChordProgress3rdUp => {
+                    let halfw = r.2 / 2.0;
+                    v.push(Line(r.0, r.1 + SPACE, r.0 + halfw, r.1 + SPACE, Strokestyle(3.0, Black)));
+                    v.push(Line(r.0 + halfw, r.1 + SPACE, r.0 + halfw, r.1, Strokestyle(3.0, Black)));
+                    v.push(Line(r.0 + halfw, r.1, r.0 + r.2, r.1, Strokestyle(3.0, Black)));
+                }
+                SymbolType::ChordProgress3rdDown => {
+                    let halfw = r.2 / 2.0;
+                    v.push(Line(r.0, r.1, r.0 + halfw, r.1, Strokestyle(3.0, Black)));
+                    v.push(Line(r.0 + halfw, r.1, r.0 + halfw, r.1 + SPACE, Strokestyle(3.0, Black)));
+                    v.push(Line(r.0 + halfw, r.1 + SPACE, r.0 + r.2, r.1 + SPACE, Strokestyle(3.0, Black)));
+                }
+
+                SymbolType::ChordProgress5thUp => {
+                    v.push(Line(r.0, r.1 + SPACE, r.0 + r.2, r.1, Strokestyle(3.0, Black)));
+                    v.push(Line(r.0, r.1 + SPACE + SPACE_HALF, r.0 + r.2, r.1 + SPACE_HALF, Strokestyle(3.0, Black)));
+                }
+                SymbolType::ChordProgress5thDown => {
+                    v.push(Line(r.0, r.1, r.0 + r.2, r.1 + SPACE, Strokestyle(3.0, Black)));
+                    v.push(Line(r.0, r.1 + SPACE_HALF, r.0 + r.2, r.1 + SPACE + SPACE_HALF, Strokestyle(3.0, Black)));
+                }
+                _ => {
+                    v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Orange), NoFill));
+                }
+            }
+            // v.push(Rect(r.0, r.1, r.2, r.3, Strokestyle(3.0, Orange), NoFill));
+
             v
         }
 
