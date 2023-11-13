@@ -279,6 +279,7 @@ pub fn nrectext2graphic(n: &NRectExt, move_x: f32, move_y: f32) -> Vec<GraphicIt
                 let path = Line(r.0, r.1 + SPACE_HALF, r.0 + SPACE_HALF, r.1 - SPACE, Strokestyle(4.0, Black));
                 vec![path]
             }
+            BarlineType::Invisible => vec![],
         },
 
         NRectType::Accidental(accidental) => {
